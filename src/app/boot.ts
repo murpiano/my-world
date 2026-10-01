@@ -15,6 +15,8 @@ import { userStore } from '@/state/user';
 import type { Light, LightRow } from '@/render/lights';
 
 export { demoUrl };
+export { routeOf } from './route';
+export type { Route } from './route';
 
 export interface World {
   earth: EarthGeo;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Storage } from '@/backend/types';
+import type { Storage, VisibilitySetting } from '@/backend/types';
 import { ownUrl } from './blobs';
 import { remoteRepository } from './remote-repository';
 import type { ArchiveData, Id } from './types';
@@ -40,6 +40,7 @@ const memory = (start: unknown = null) => {
     archive: start,
     photos: new Map<Id, Blob>(),
     saved: [] as unknown[],
+    visibility: new Map<string, VisibilitySetting>(),
     failSave: false,
     delay: (() => 0) as (n: number) => number,
     calls: 0,
@@ -70,6 +71,15 @@ const memory = (start: unknown = null) => {
       state.archive = null;
       state.photos.clear();
       return Promise.resolve();
+    },
+    getVisibility: (kind, itemId) =>
+      Promise.resolve(
+        state.visibility.get(`${kind}:${itemId}`) ?? { level: 'private' as const, linkToken: null },
+      ),
+    setVisibility: (kind, itemId, level) => {
+      const setting = { level, linkToken: level === 'link' ? 'token' : null };
+      state.visibility.set(`${kind}:${itemId}`, setting);
+      return Promise.resolve(setting);
     },
   };
   return { state, store };

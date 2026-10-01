@@ -1,7 +1,14 @@
 import type { SupabaseClient, User as AuthUser } from '@supabase/supabase-js';
 import { DEMO_HOME } from '@/data/demo';
 import { cleanPlace } from '@/state/user';
-import type { Account, Auth, Backend, Storage } from './types';
+import type {
+  Account,
+  Auth,
+  Backend,
+  Storage,
+  VisibilityLevel,
+  VisibilitySetting,
+} from './types';
 import type { BackendConfig } from './config';
 
 const BUCKET = 'photos';
@@ -23,11 +30,16 @@ const fail = (error: { message: string } | null): void => {
   if (error) throw new Error(error.message);
 };
 
-const authOf = (client: SupabaseClient): Auth => ({
+export const authOf = (client: SupabaseClient): Auth => ({
   async session() {
     const { data, error } = await client.auth.getSession();
     fail(error);
     return data.session ? accountOf(data.session.user) : null;
+  },
+  async accessToken() {
+    const { data, error } = await client.auth.getSession();
+    fail(error);
+    return data.session?.access_token ?? null;
   },
   async signUp({ email, password, name, home }) {
     const { data, error } = await client.auth.signUp({
@@ -56,9 +68,21 @@ const authOf = (client: SupabaseClient): Auth => ({
   },
 });
 
-const storageOf = (client: SupabaseClient, accountId: string): Storage => {
+export const storageOf = (client: SupabaseClient, accountId: string): Storage => {
   const path = (id: string) => `${accountId}/${id}`;
   const bucket = client.storage.from(BUCKET);
+  const visibilityTable = () => client.from('content_visibility');
+  const readVisibility = async (kind: string, itemId: string): Promise<VisibilitySetting> => {
+    const { data, error } = await visibilityTable()
+      .select('level, link_token')
+      .eq('owner_id', accountId)
+      .eq('kind', kind)
+      .eq('item_id', itemId)
+      .maybeSingle();
+    fail(error);
+    const row = data as { level: VisibilityLevel; link_token: string | null } | null;
+    return { level: row?.level ?? 'private', linkToken: row?.link_token ?? null };
+  };
   return {
     async loadArchive() {
       const { data, error } = await client
@@ -118,6 +142,26 @@ const storageOf = (client: SupabaseClient, accountId: string): Storage => {
       }
       const { error } = await client.from('archives').delete().eq('user_id', accountId);
       fail(error);
+    },
+    getVisibility: (kind, itemId) => readVisibility(kind, itemId),
+    async setVisibility(kind, itemId, level) {
+      const linkToken =
+        level === 'link'
+          ? ((await readVisibility(kind, itemId)).linkToken ?? crypto.randomUUID())
+          : null;
+      const { error } = await visibilityTable().upsert(
+        {
+          owner_id: accountId,
+          kind,
+          item_id: itemId,
+          level,
+          link_token: linkToken,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'owner_id,kind,item_id' },
+      );
+      fail(error);
+      return { level, linkToken };
     },
   };
 };

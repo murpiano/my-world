@@ -10,6 +10,7 @@ import { ConfirmButton } from './ConfirmButton';
 import { DropZone } from './DropZone';
 import { dateInput, parseDate } from './fields';
 import { PlaceField } from './PlaceField';
+import { PrivacyField } from './PrivacyField';
 import { Acts, Sheet } from './Sheet';
 
 const today = (): string => {
@@ -173,6 +174,9 @@ export function AlbumForm({
           ))}
         </select>
       </label>
+      {album && world.accountId && (
+        <PrivacyField kind="album" itemId={album.id} accountId={world.accountId} />
+      )}
       {!album && (
         <>
           <DropZone onFiles={(added) => setFiles([...files, ...added])} />

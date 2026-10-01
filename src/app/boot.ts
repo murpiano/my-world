@@ -23,6 +23,8 @@ export interface World {
   lights: Light[];
   archive: Archive;
   home: Place;
+  /** The signed-in account, when a backend holds this archive; null otherwise. */
+  accountId: string | null;
   /** Photo credits of the demo, by file name. */
   credits: ReadonlyMap<string, Credit>;
 }
@@ -73,6 +75,7 @@ export const loadWorld = async (): Promise<World> => {
     lights: lightsFromRows(rows),
     archive,
     home: user?.home ?? DEMO_HOME,
+    accountId: back && account ? account.id : null,
     credits: new Map(credits.map((credit) => [credit.file, credit])),
   };
 };

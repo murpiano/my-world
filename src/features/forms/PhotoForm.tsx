@@ -5,6 +5,7 @@ import { photoUrl } from '@/data/photos';
 import { photoKey, photoNote } from '@/data/social';
 
 import { ConfirmButton } from './ConfirmButton';
+import { PrivacyField } from './PrivacyField';
 import { Acts, Sheet } from './Sheet';
 import { useEdit } from './useEdit';
 
@@ -39,6 +40,9 @@ export function PhotoForm({
           onChange={(event) => setText(event.target.value)}
         />
       </label>
+      {photo.kind === 'own' && world.accountId && (
+        <PrivacyField kind="photo" itemId={photo.id} accountId={world.accountId} />
+      )}
       <Acts>
         <ConfirmButton
           label="Delete photo"

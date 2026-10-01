@@ -180,6 +180,11 @@ async function main() {
           end: { home: true },
           albumIds: ['album-in-private-trip'],
         },
+        // public-trips and shared-content both read the live archive, so every trip the
+        // visibility rows above point at has to exist here as well
+        { id: 'pub-trip', name: 'Public trip', start: { home: true }, end: { home: true }, albumIds: [] },
+        { id: 'reg-trip', name: 'Registered trip', start: { home: true }, end: { home: true }, albumIds: [] },
+        { id: 'link-trip', name: 'Link trip', start: { home: true }, end: { home: true }, albumIds: [] },
       ],
     },
   });
@@ -220,14 +225,59 @@ async function main() {
   );
 
   // profiles: public read, owner-only write
-  await admin.from('profiles').insert({ user_id: owner, handle: 'verify-owner' });
+  // unique per run: `handle` is unique, and a run that dies early leaves its row behind
+  const handle = `verify-${Date.now().toString(36)}`;
+  await admin.from('profiles').insert({ user_id: owner, handle });
   const anon = createClient(url, anonKey);
   const { data: readAsAnon } = await anon
     .from('profiles')
     .select('handle')
     .eq('user_id', owner)
     .maybeSingle();
-  check('a stranger can read a handle', readAsAnon?.handle === 'verify-owner');
+  check('a stranger can read a handle', readAsAnon?.handle === handle);
+
+  // Edge Functions
+  const call = async (fn, payload, bearer = anonKey) => {
+    const response = await fetch(`${url}/functions/v1/${fn}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', apikey: anonKey, authorization: `Bearer ${bearer}` },
+      body: JSON.stringify(payload),
+    });
+    const text = await response.text();
+    let body;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = { error: text };
+    }
+    return { status: response.status, body };
+  };
+
+  const pubTrip = await call('shared-content', { owner_id: owner, kind: 'trip', item_id: 'pub-trip' });
+  check('shared-content returns a public trip anonymously', pubTrip.status === 200 && pubTrip.body.trip?.id === 'pub-trip');
+
+  const hidden = await call('shared-content', { owner_id: owner, kind: 'trip', item_id: tripId });
+  check('shared-content 404s a private trip', hidden.status === 404);
+
+  const linked = await call('shared-content', { owner_id: owner, kind: 'trip', item_id: 'link-trip', token });
+  check('shared-content honors the right link token', linked.status === 200);
+  const wrongLinked = await call('shared-content', { owner_id: owner, kind: 'trip', item_id: 'link-trip', token: wrongToken });
+  check('shared-content rejects the wrong link token', wrongLinked.status === 404);
+
+  const strictAlbum = await call('shared-content', { owner_id: owner, kind: 'album', item_id: 'album-in-private-trip' });
+  check('shared-content 404s a public album inside a private trip', strictAlbum.status === 404);
+
+  const withPrivatePhoto = await call('shared-content', { owner_id: owner, kind: 'album', item_id: 'album-with-private-photo' });
+  check(
+    'shared-content strips a private photo from an otherwise-public album',
+    withPrivatePhoto.status === 200 && withPrivatePhoto.body.album?.photos?.length === 0,
+  );
+
+  const trips = await call('public-trips', { owner_id: owner });
+  check(
+    'public-trips lists the public trip anonymously, and not the registered-only one',
+    JSON.stringify(trips.body.trips) === JSON.stringify([{ id: 'pub-trip', name: 'Public trip' }]),
+  );
 
   await admin.auth.admin.deleteUser(owner);
   await admin.auth.admin.deleteUser(other);

@@ -20,7 +20,7 @@ the data is row level security in the database, set up by the migration below.
 ## Set it up
 
 1. Make a project at [supabase.com](https://supabase.com) (the free plan is enough to start).
-2. Run [the migration](migrations/20260930000000_init.sql): open **SQL Editor**, paste it, run.
+2. Run the migrations in [`migrations/`](migrations), oldest first: open **SQL Editor**, paste each, run.
    (Or with the CLI: `npx supabase link --project-ref <ref>` and `npx supabase db push`.)
 3. **Authentication → Providers → Email**: for a first test, switch **Confirm email** off, so an
    account works at once. The free plan sends only a few confirmation emails an hour; before
@@ -28,11 +28,14 @@ the data is row level security in the database, set up by the migration below.
    confirmation back on.
 4. **Authentication → URL Configuration**: set **Site URL** to `https://murpiano.github.io/my-world/`
    (and add `http://127.0.0.1:3001` to the redirect URLs for local work).
-5. **Project Settings → API**: copy the **Project URL** and the **anon public** key.
-6. For the live site: in the GitHub repository, **Settings → Secrets and variables → Actions →
+5. Deploy the sharing Edge Functions: `npx supabase functions deploy shared-content` and
+   `npx supabase functions deploy public-trips`. They run with the service-role key Supabase
+   sets for every Edge Function automatically — nothing to configure.
+6. **Project Settings → API**: copy the **Project URL** and the **anon public** key.
+7. For the live site: in the GitHub repository, **Settings → Secrets and variables → Actions →
    Variables**, add `SUPABASE_URL` and `SUPABASE_KEY` with those two values. The next push to
    `main` builds the app with them.
-7. For local work: copy [`.env.example`](../.env.example) to `.env.local`, fill it in, `npm run dev`.
+8. For local work: copy [`.env.example`](../.env.example) to `.env.local`, fill it in, `npm run dev`.
 
 Never put the **service_role** key anywhere in this repository or in the page.
 

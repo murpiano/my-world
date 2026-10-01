@@ -1,6 +1,6 @@
 // src/backend/handle.test.ts
 import { describe, expect, it } from 'vitest';
-import { slugify } from './handle';
+import { handleSeed, slugify } from './handle';
 
 describe('slugify', () => {
   it('lowercases and hyphenates', () => {
@@ -21,5 +21,26 @@ describe('slugify', () => {
 
   it('clamps to 30 characters', () => {
     expect(slugify('a'.repeat(50)).length).toBe(30);
+  });
+});
+
+describe('handleSeed', () => {
+  it('uses the name when there is one', () => {
+    expect(handleSeed('Ivan Petrov')).toBe('ivan-petrov');
+  });
+
+  it('never builds a handle out of the email address', () => {
+    // profiles is readable by anyone, so an email-shaped handle would publish the address
+    const seed = handleSeed('');
+    expect(seed).not.toContain('bvtrots');
+    expect(seed).not.toContain('gmail');
+  });
+
+  it('falls back to something random, not a shared default', () => {
+    expect(handleSeed('')).not.toBe(handleSeed(''));
+  });
+
+  it('falls back to a handle the database will accept', () => {
+    expect(handleSeed('')).toMatch(/^[a-z0-9-]{3,30}$/);
   });
 });

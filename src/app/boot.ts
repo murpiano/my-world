@@ -47,7 +47,8 @@ export const loadWorld = async (route: Route = { kind: 'app' }): Promise<World> 
   ]);
   const earth = earthFromTopology(topology);
 
-  // a shared trip or album: the same globe, from the one subtree the owner opened, read-only
+  // a shared trip or album: the same globe, from the one subtree the owner opened, read-only.
+  // A lone shared photo never gets here — App renders it as a picture, with no world at all.
   if (route.kind === 'shared' && route.content !== 'photo') {
     const shared = await startBackend().catch(() => null);
     // a visitor who happens to be signed in is a 'registered' viewer; the token says so

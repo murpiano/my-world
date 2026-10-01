@@ -45,3 +45,10 @@
     color: var(--muted);
   }
 }
+
+.shared--photo img {
+  max-width: min(100%, 1100px);
+  max-height: 78vh;
+  border-radius: 10px;
+  object-fit: contain;
+}

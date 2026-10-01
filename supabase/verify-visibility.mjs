@@ -158,6 +158,16 @@ async function main() {
                   photos: [],
                 },
                 {
+                  id: 'album-in-link-trip',
+                  title: 'Inside a link trip',
+                  year: 2024,
+                  month: 1,
+                  day: 4,
+                  time: '10:00',
+                  photoCount: 1,
+                  photos: [{ kind: 'own', id: 'photo-in-link-trip', name: 'two.jpg' }],
+                },
+                {
                   id: 'album-with-private-photo',
                   title: 'Mostly open',
                   year: 2024,
@@ -184,14 +194,24 @@ async function main() {
         // visibility rows above point at has to exist here as well
         { id: 'pub-trip', name: 'Public trip', start: { home: true }, end: { home: true }, albumIds: [] },
         { id: 'reg-trip', name: 'Registered trip', start: { home: true }, end: { home: true }, albumIds: [] },
-        { id: 'link-trip', name: 'Link trip', start: { home: true }, end: { home: true }, albumIds: [] },
+        { id: 'link-trip', name: 'Link trip', start: { home: true }, end: { home: true }, albumIds: ['album-in-link-trip'] },
       ],
     },
   });
+  // a signed URL can only be made for a file that is really there
+  await admin.storage
+    .from('photos')
+    .upload(`${owner}/photo-in-link-trip`, new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: 'image/jpeg' }), {
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+
   await admin.from('content_visibility').insert([
     { owner_id: owner, kind: 'album', item_id: 'album-in-private-trip', level: 'public' },
     { owner_id: owner, kind: 'album', item_id: 'album-with-private-photo', level: 'public' },
     { owner_id: owner, kind: 'photo', item_id: 'private-photo', level: 'private' },
+    { owner_id: owner, kind: 'album', item_id: 'album-in-link-trip', level: 'public' },
+    { owner_id: owner, kind: 'photo', item_id: 'photo-in-link-trip', level: 'public' },
   ]);
   check(
     'a public album inside a private (default) trip is blocked',
@@ -273,10 +293,41 @@ async function main() {
     withPrivatePhoto.status === 200 && withPrivatePhoto.body.album?.photos?.length === 0,
   );
 
+  const linkedTrip = await call('shared-content', { owner_id: owner, kind: 'trip', item_id: 'link-trip', token });
+  check(
+    'a link-shared trip carries the albums inside it',
+    linkedTrip.status === 200 && linkedTrip.body.albums?.length === 1,
+    JSON.stringify(linkedTrip.body.albums?.map((a) => a.id) ?? linkedTrip.body),
+  );
+  check(
+    'and their photos, signed',
+    typeof linkedTrip.body.albums?.[0]?.photos?.[0]?.url === 'string',
+    JSON.stringify(linkedTrip.body.albums?.[0]?.photos ?? []),
+  );
+
   const trips = await call('public-trips', { owner_id: owner });
   check(
     'public-trips lists the public trip anonymously, and not the registered-only one',
     JSON.stringify(trips.body.trips) === JSON.stringify([{ id: 'pub-trip', name: 'Public trip' }]),
+  );
+
+  // the visibility functions are the server's business: a stranger must not be able to call
+  // them, least of all visibility_ancestors, which would map a private archive's structure
+  const anonRpc = async (fn, args) => {
+    const response = await fetch(`${url}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', apikey: anonKey, authorization: `Bearer ${anonKey}` },
+      body: JSON.stringify(args),
+    });
+    return response.status;
+  };
+  check(
+    'a stranger cannot call can_view',
+    (await anonRpc('can_view', { p_owner: owner, p_kind: 'trip', p_item_id: 'pub-trip' })) >= 400,
+  );
+  check(
+    'a stranger cannot map an archive with visibility_ancestors',
+    (await anonRpc('visibility_ancestors', { p_owner: owner, p_kind: 'photo', p_item_id: 'private-photo' })) >= 400,
   );
 
   await admin.auth.admin.deleteUser(owner);

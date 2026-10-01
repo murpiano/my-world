@@ -1,7 +1,7 @@
 import type { SupabaseClient, User as AuthUser } from '@supabase/supabase-js';
 import { DEMO_HOME } from '@/data/demo';
 import { cleanPlace } from '@/state/user';
-import { slugify } from './handle';
+import { handleSeed } from './handle';
 import type {
   Account,
   Auth,
@@ -55,8 +55,8 @@ const ensureHandle = async (client: SupabaseClient, user: AuthUser): Promise<voi
     .maybeSingle();
   if (existing) return;
   const meta = user.user_metadata as { name?: unknown };
-  const name = typeof meta.name === 'string' ? meta.name : (user.email ?? '');
-  const handle = await uniqueHandle(client, slugify(name));
+  const name = typeof meta.name === 'string' ? meta.name : '';
+  const handle = await uniqueHandle(client, handleSeed(name));
   await client.from('profiles').insert({ user_id: user.id, handle });
 };
 

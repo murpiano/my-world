@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { resolveHandle } from '@/backend/handle';
-import { fetchPublicTrips } from '@/backend/sharing';
-import type { SharedTrip } from '@/backend/sharing';
+import { fetchPublicTrips, fetchSharedContent } from '@/backend/sharing';
+import type { SharedPhoto, SharedTrip } from '@/backend/sharing';
 import { backend } from '@/backend/session';
-import { profileState } from './profile';
+import { photoState, profileState } from './profile';
 import type { Route } from './route';
 import './shared.scss';
 
@@ -55,6 +55,40 @@ export function SharedView({ route }: { route: Extract<Route, { kind: 'profile' 
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** One shared photo on its own, for a link an owner copied from a single photo. */
+export function SharedPhotoView({ route }: { route: Extract<Route, { kind: 'shared' }> }) {
+  const [answer, setAnswer] = useState<{ kind: string; photo?: SharedPhoto } | null | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const bearer = (await backend()?.auth.accessToken().catch(() => null)) ?? undefined;
+      const result = await fetchSharedContent(route.owner, 'photo', route.item, {
+        ...(route.token === undefined ? {} : { token: route.token }),
+        ...(bearer === undefined ? {} : { bearer }),
+      });
+      if (live) setAnswer(result as { kind: string; photo?: SharedPhoto } | null);
+    })();
+    return () => {
+      live = false;
+    };
+  }, [route.owner, route.item, route.token]);
+
+  const state = photoState(answer);
+  if (state.status === 'loading') return <div className="shared shared--loading">Loading…</div>;
+  if (state.status === 'away') return <Away />;
+
+  return (
+    <div className="shared shared--photo">
+      <img src={state.url} alt={state.caption ?? ''} />
+      {state.caption && <p>{state.caption}</p>}
+      <a href={import.meta.env.BASE_URL}>My World</a>
     </div>
   );
 }

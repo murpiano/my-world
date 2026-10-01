@@ -17,6 +17,17 @@ export const slugify = (name: string): string => {
 };
 
 /**
+ * What to build an account's first handle from. Never the email address: `profiles` is readable
+ * by anyone, and `name@example.com` slugified is still the address. With no name to go on it is
+ * a random word, which the owner can change in their account settings.
+ */
+export const handleSeed = (name: string): string => {
+  const fromName = name.trim() ? slugify(name) : '';
+  if (fromName && fromName !== 'traveller') return fromName;
+  return `traveller-${Math.random().toString(36).slice(2, 8)}`;
+};
+
+/**
  * The account id behind a public handle, read straight from `profiles`, which the migration
  * makes readable by anyone — that is what a profile page is for. Null when there is no backend,
  * no such handle, or the request fails: the caller shows the same "not available" either way.

@@ -6,6 +6,9 @@ const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const admin = createClient(url, serviceKey);
 
 type Kind = 'trip' | 'album' | 'photo';
+
+/** Short on purpose: a URL already in a tab must not outlive the owner closing the share. */
+const SIGNED_FOR_S = 300;
 type PhotoRef =
   | { kind: 'stock'; file: string; caption?: string }
   | { kind: 'own'; id: string; name: string; caption?: string };
@@ -73,7 +76,7 @@ const signPhoto = async (
   if (!(await canView(ownerId, 'photo', photo.id, viewer, token))) return null;
   const { data: signed } = await admin.storage
     .from('photos')
-    .createSignedUrl(`${ownerId}/${photo.id}`, 3600);
+    .createSignedUrl(`${ownerId}/${photo.id}`, SIGNED_FOR_S);
   if (!signed) return null;
   // the path, not the whole address: in here SUPABASE_URL is the internal hostname, which is
   // no use to a browser. The client finishes the address with the URL it was built with.
@@ -100,7 +103,8 @@ Deno.serve(async (req) => {
     return notFound();
   }
   const { owner_id: ownerId, kind, item_id: itemId, token } = body;
-  if (!ownerId || !kind || !itemId) return notFound();
+  if (!ownerId || !itemId) return notFound();
+  if (kind !== 'trip' && kind !== 'album' && kind !== 'photo') return notFound();
 
   const viewer = await viewerFromAuth(req);
   if (!(await canView(ownerId, kind, itemId, viewer, token))) return notFound();
@@ -139,6 +143,8 @@ Deno.serve(async (req) => {
           kind: 'album',
           album: {
             ...album,
+            // the owner's own tally counts photos this viewer may not see
+            photoCount: photos.length,
             photos,
             cityKey: city.key,
             cityName: city.name,
@@ -159,10 +165,11 @@ Deno.serve(async (req) => {
     for (const city of country.cities) {
       for (const album of city.albums) {
         if (!trip.albumIds.includes(album.id)) continue;
-        if (!(await canView(ownerId, 'album', album.id, viewer, undefined))) continue;
-        const photos = await filterPhotos(ownerId, viewer, undefined, album.photos);
+        if (!(await canView(ownerId, 'album', album.id, viewer, token))) continue;
+        const photos = await filterPhotos(ownerId, viewer, token, album.photos);
         albums.push({
           ...album,
+          photoCount: photos.length,
           photos,
           cityKey: city.key,
           cityName: city.name,

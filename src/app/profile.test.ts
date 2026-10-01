@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { profileState } from './profile';
+import { photoState, profileState } from './profile';
 import { resolveHandle } from '@/backend/handle';
 
 describe('profileState', () => {
@@ -16,6 +16,35 @@ describe('profileState', () => {
       status: 'trips',
       trips: [{ id: 't1', name: 'Peru' }],
     });
+  });
+});
+
+describe('photoState', () => {
+  it('is loading until the answer arrives', () => {
+    expect(photoState(undefined)).toEqual({ status: 'loading' });
+  });
+
+  it('is away when the photo is withheld or gone', () => {
+    expect(photoState(null)).toEqual({ status: 'away' });
+  });
+
+  it('is away when the answer is not a photo after all', () => {
+    expect(photoState({ kind: 'album' } as never)).toEqual({ status: 'away' });
+  });
+
+  it('is away for a stock photo, which carries no address of its own', () => {
+    expect(photoState({ kind: 'photo', photo: { kind: 'stock', file: 'w-x.jpg' } } as never)).toEqual({
+      status: 'away',
+    });
+  });
+
+  it('shows the photo with its signed address and caption', () => {
+    expect(
+      photoState({
+        kind: 'photo',
+        photo: { kind: 'own', id: 'p1', name: 'one.jpg', caption: 'Morning', url: 'https://signed/p1' },
+      } as never),
+    ).toEqual({ status: 'photo', url: 'https://signed/p1', caption: 'Morning' });
   });
 });
 

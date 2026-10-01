@@ -91,6 +91,13 @@ The backend is optional and chosen when the app is built: with `VITE_SUPABASE_UR
 storage (loaded only then, as a separate chunk); without them everything stays in the browser. The
 setup, the database migration and its row level security are in [supabase/](supabase/README.md).
 
+With a backend behind it, any trip, album or photo can also be opened to other people — to
+whoever holds a link, to anyone signed in, or to everyone — each set on its own, and each
+private until it is not. An opened trip is shown on the owner's profile at `/u/<handle>`, and
+shares open the same globe the owner sees, read-only. The strictest setting among an item and
+everything above it wins, so a public album inside a private trip stays hidden. How it is
+enforced is in [supabase/](supabase/README.md#sharing).
+
 ### Edits without a rebuild
 
 An edit runs as a pure function on the stored graph (`src/data/edits.ts`), then `relinkInto`

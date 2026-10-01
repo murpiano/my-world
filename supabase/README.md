@@ -16,6 +16,8 @@ the data is row level security in the database, set up by the migration below.
 | `auth.users` | email, password hash, `user_metadata` (name, home base) | the account itself |
 | `public.archives` | one row per account: the archive as one JSON document | its owner only (RLS) |
 | bucket `photos` | `<account id>/<photo id>`: the photo files, private | its owner only (RLS) |
+| `public.content_visibility` | how open one trip, album or photo is, and its link token | its owner (RLS); read server-side by the Edge Functions |
+| `public.profiles` | the account's public handle | anyone may read it; its owner writes it |
 
 ## Set it up
 
@@ -46,3 +48,27 @@ Never put the **service_role** key anywhere in this repository or in the page.
 - An edit replaces the whole archive document; two devices editing at once, the last save wins.
 - Deleting an account itself (not just its data) needs a server-side function and is not built:
   "Reset archive to the demo" in the account settings deletes the archive and every photo.
+
+## Sharing
+
+Every trip, album and photo is `private` until its owner opens it, one of four ways: `private`,
+`link` (whoever holds the generated link), `registered` (anyone with an account), or `public`.
+The levels are set per item, and the strictest one among an item and everything above it wins —
+a `public` album inside a `private` trip stays hidden, because the trip is the way in.
+
+Nothing but the owner reads the database directly. `archives` and the `photos` bucket keep their
+owner-only RLS, and every other reader goes through two Edge Functions:
+
+| Function | Answers |
+| --- | --- |
+| `shared-content` | one trip, album or photo — with the photos the viewer may see, each as a signed URL |
+| `public-trips` | the trips an account has opened, for its profile page at `/u/<handle>` |
+
+Both call `can_view(owner, kind, item_id, viewer, token)`, the one place the rule lives. The
+viewer and the link token are passed in explicitly rather than read from `auth.uid()`, because
+an Edge Function runs with the service-role key and would otherwise look anonymous to the
+database no matter who is actually visiting.
+
+`node supabase/verify-visibility.mjs` checks the whole of it against a project — twenty checks
+over two accounts and an anonymous caller. It needs `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY`, and it makes and deletes its own test accounts.

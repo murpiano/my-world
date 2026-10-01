@@ -48,7 +48,14 @@ export const loadWorld = async (): Promise<World> => {
   const account = back ? await back.auth.session().catch(() => null) : null;
   if (back) {
     userStore.set({
-      user: account ? { name: account.name, email: account.email, home: account.home } : null,
+      user: account
+        ? {
+            name: account.name,
+            email: account.email,
+            home: account.home,
+            handle: account.handle,
+          }
+        : null,
     });
   }
   const { user } = userStore.get();

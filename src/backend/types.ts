@@ -6,6 +6,8 @@ export interface Account {
   name: string;
   email: string;
   home: Place;
+  /** The public handle, for the profile at /u/<handle>; empty until one is made. */
+  handle: string;
 }
 
 export interface SignUp {
@@ -33,7 +35,13 @@ export interface Auth {
   signUp(input: SignUp): Promise<'signed-in' | 'confirm-email'>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
-  update(input: { name: string; email: string; home: Place; password?: string }): Promise<void>;
+  update(input: {
+    name: string;
+    email: string;
+    home: Place;
+    password?: string;
+    handle?: string;
+  }): Promise<void>;
 }
 
 /** The storage of one signed-in account: its archive, and the photo files that go with it. */

@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Header } from '@/features/header/Header';
-import { loadWorld } from './boot';
+import { loadWorld, routeOf } from './boot';
 import type { World } from './boot';
+import { Away, SharedView } from './SharedView';
 import { Splash } from './Splash';
 import { Stage } from './Stage';
 import './app.scss';
 
 type Boot = { status: 'loading' } | { status: 'ready'; world: World } | { status: 'failed' };
+
+// read once: the app has no router, and the two shareable paths never change under it
+const route = routeOf(location.pathname, location.search, import.meta.env.BASE_URL);
 
 export function App() {
   const [boot, setBoot] = useState<Boot>({ status: 'loading' });
@@ -15,8 +19,9 @@ export function App() {
   const letIn = useCallback(() => setStageUp(true), []);
 
   useEffect(() => {
+    if (route.kind === 'profile') return;
     let live = true;
-    loadWorld().then(
+    loadWorld(route).then(
       (world) => {
         if (live) setBoot({ status: 'ready', world });
       },
@@ -29,6 +34,15 @@ export function App() {
       live = false;
     };
   }, []);
+
+  // the profile page is a plain list, not the globe: no world to build, no splash to wait for
+  if (route.kind === 'profile') return <SharedView route={route} />;
+
+  // a shared link that is private, revoked, or simply wrong comes back with nothing in it:
+  // say so plainly instead of showing an empty globe
+  if (route.kind === 'shared' && boot.status === 'ready' && boot.world.archive.albums.length === 0) {
+    return <Away />;
+  }
 
   return (
     <>

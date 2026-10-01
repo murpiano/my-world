@@ -46,6 +46,74 @@ describe('fetchSharedContent', () => {
   });
 });
 
+describe('fetchSharedContent photo addresses', () => {
+  it('resolves the signed path against the URL the app was built with', async () => {
+    // the Edge Function returns a path, not a full address: inside its own network it only
+    // knows the internal hostname, which no browser can reach
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            kind: 'album',
+            album: {
+              id: 'a1',
+              photos: [
+                { kind: 'own', id: 'p1', name: 'one.jpg', url: '/storage/v1/object/sign/photos/x?token=t' },
+                { kind: 'stock', file: 'w-x.jpg' },
+              ],
+            },
+          }),
+      }),
+    );
+    const result = await fetchSharedContent('owner-1', 'album', 'a1');
+    const photos = result?.kind === 'album' ? result.album.photos : [];
+    expect(photos[0]).toMatchObject({
+      url: 'https://proj.supabase.co/storage/v1/object/sign/photos/x?token=t',
+    });
+    expect(photos[1]).toEqual({ kind: 'stock', file: 'w-x.jpg' });
+  });
+
+  it('leaves an address that is already absolute alone', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            kind: 'photo',
+            photo: { kind: 'own', id: 'p1', name: 'one.jpg', url: 'https://cdn.example/p1' },
+          }),
+      }),
+    );
+    const result = await fetchSharedContent('owner-1', 'photo', 'p1');
+    expect(result?.kind === 'photo' && result.photo).toMatchObject({
+      url: 'https://cdn.example/p1',
+    });
+  });
+
+  it('resolves the photos of every album in a shared trip', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            kind: 'trip',
+            trip: { id: 't1', name: 'Peru', albumIds: ['a1'] },
+            albums: [
+              { id: 'a1', photos: [{ kind: 'own', id: 'p1', name: 'one.jpg', url: '/storage/v1/x' }] },
+            ],
+          }),
+      }),
+    );
+    const result = await fetchSharedContent('owner-1', 'trip', 't1');
+    const photos = result?.kind === 'trip' ? result.albums[0]?.photos : [];
+    expect(photos?.[0]).toMatchObject({ url: 'https://proj.supabase.co/storage/v1/x' });
+  });
+});
+
 describe('fetchPublicTrips', () => {
   it('posts to public-trips and returns the list', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ trips: [{ id: 't1', name: 'Peru' }] }) });

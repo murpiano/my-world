@@ -56,13 +56,44 @@ const call = async <T>(fn: string, body: unknown, bearer?: string): Promise<T | 
   return (await response.json()) as T;
 };
 
-export const fetchSharedContent = (
+/**
+ * The Edge Function hands back a signed *path*, because inside its own network it only knows
+ * the internal hostname — which no browser can reach. The address is finished here, against
+ * the URL this build was given.
+ */
+const absolute = (url: string, base: string): string =>
+  url.startsWith('/') ? `${base.replace(/\/$/, '')}${url}` : url;
+
+const resolvePhotos = (photos: SharedPhoto[], base: string): SharedPhoto[] =>
+  photos.map((photo) => (photo.kind === 'own' ? { ...photo, url: absolute(photo.url, base) } : photo));
+
+export const fetchSharedContent = async (
   ownerId: string,
   kind: VisibilityKind,
   itemId: string,
   opts: { token?: string; bearer?: string } = {},
-): Promise<SharedTripContent | SharedAlbumContent | SharedPhotoContent | null> =>
-  call('shared-content', { owner_id: ownerId, kind, item_id: itemId, token: opts.token }, opts.bearer);
+): Promise<SharedTripContent | SharedAlbumContent | SharedPhotoContent | null> => {
+  const config = backendConfig();
+  const result = await call<SharedTripContent | SharedAlbumContent | SharedPhotoContent>(
+    'shared-content',
+    { owner_id: ownerId, kind, item_id: itemId, token: opts.token },
+    opts.bearer,
+  );
+  if (!result || !config) return result;
+  if (result.kind === 'trip') {
+    return {
+      ...result,
+      albums: result.albums.map((album) => ({
+        ...album,
+        photos: resolvePhotos(album.photos, config.url),
+      })),
+    };
+  }
+  if (result.kind === 'album') {
+    return { ...result, album: { ...result.album, photos: resolvePhotos(result.album.photos, config.url) } };
+  }
+  return { ...result, photo: resolvePhotos([result.photo], config.url)[0] as SharedPhoto };
+};
 
 export const fetchPublicTrips = async (ownerId: string, bearer?: string): Promise<SharedTrip[]> => {
   const result = await call<{ trips: SharedTrip[] }>('public-trips', { owner_id: ownerId }, bearer);

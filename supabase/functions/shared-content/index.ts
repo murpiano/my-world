@@ -74,7 +74,11 @@ const signPhoto = async (
   const { data: signed } = await admin.storage
     .from('photos')
     .createSignedUrl(`${ownerId}/${photo.id}`, 3600);
-  return signed ? { ...photo, url: signed.signedUrl } : null;
+  if (!signed) return null;
+  // the path, not the whole address: in here SUPABASE_URL is the internal hostname, which is
+  // no use to a browser. The client finishes the address with the URL it was built with.
+  const url = new URL(signed.signedUrl);
+  return { ...photo, url: `${url.pathname}${url.search}` };
 };
 
 const filterPhotos = async (

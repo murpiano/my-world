@@ -1,6 +1,7 @@
 // src/data/shared-repository.test.ts
 import { describe, expect, it, vi } from 'vitest';
 import * as sharing from '@/backend/sharing';
+import { forgetOwnUrls, ownUrl } from './blobs';
 import { sharedRepository } from './shared-repository';
 
 vi.mock('@/backend/sharing');
@@ -66,6 +67,29 @@ describe('sharedRepository', () => {
     vi.mocked(sharing.fetchSharedContent).mockResolvedValue(null);
     const data = await sharedRepository('owner-1', 'trip', 'gone').load();
     expect(data).toEqual({ countries: [], trips: [] });
+  });
+
+  it('registers the signed URL of every shared photo, so the page can show it', async () => {
+    forgetOwnUrls();
+    vi.mocked(sharing.fetchSharedContent).mockResolvedValue({
+      kind: 'album',
+      album: {
+        id: 'a1',
+        title: 'Lima days',
+        year: 2024,
+        month: 3,
+        day: 1,
+        time: '09:00',
+        photoCount: 1,
+        photos: [{ kind: 'own', id: 'p1', name: 'one.jpg', url: 'https://signed/p1' }],
+        cityKey: 'lima',
+        cityName: 'Lima',
+        countryId: '604',
+        countryName: 'Peru',
+      },
+    });
+    await sharedRepository('owner-1', 'album', 'a1').load();
+    expect(ownUrl('p1')).toBe('https://signed/p1');
   });
 
   it('cleans what it loads, like the other repositories do', async () => {

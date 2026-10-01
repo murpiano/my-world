@@ -1,6 +1,7 @@
 // src/data/shared-repository.ts
 import { fetchSharedContent } from '@/backend/sharing';
-import type { SharedAlbum } from '@/backend/sharing';
+import type { SharedAlbum, SharedPhoto } from '@/backend/sharing';
+import { forgetOwnUrls, rememberOwnUrl } from './blobs';
 import { cleanArchive } from './repository';
 import type { Repository } from './repository';
 import type { AlbumData, ArchiveData, PhotoRef } from './types';
@@ -85,6 +86,17 @@ export const sharedRepository = (
   async load() {
     const result = await fetchSharedContent(ownerId, kind, itemId, opts);
     if (!result) return EMPTY;
+    // the Edge Function signs each photo it is willing to hand over; `photoUrl` reads those
+    // addresses from here, so a shared photo shows nothing until they are registered
+    forgetOwnUrls();
+    const remember = (photos: SharedPhoto[]) => {
+      for (const photo of photos) {
+        if (photo.kind === 'own' && photo.url) rememberOwnUrl(photo.id, photo.url);
+      }
+    };
+    if (result.kind === 'trip') for (const album of result.albums) remember(album.photos);
+    if (result.kind === 'album') remember(result.album.photos);
+    if (result.kind === 'photo') remember([result.photo]);
     const raw =
       result.kind === 'trip'
         ? archiveOfTrip(result.trip, result.albums)

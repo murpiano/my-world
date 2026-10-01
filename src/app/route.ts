@@ -33,3 +33,11 @@ export const routeOf = (pathname: string, search: string, base: string): Route =
 
   return APP;
 };
+
+let current: Route | null = null;
+
+/** This page's route, read once from the URL and then remembered. */
+export const currentRoute = (): Route => {
+  current ??= routeOf(location.pathname, location.search, import.meta.env.BASE_URL);
+  return current;
+};

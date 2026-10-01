@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Header } from '@/features/header/Header';
-import { loadWorld, routeOf } from './boot';
+import { loadWorld } from './boot';
+import { currentRoute } from './route';
 import type { World } from './boot';
 import { Away, SharedView } from './SharedView';
 import { Splash } from './Splash';
@@ -10,7 +11,7 @@ import './app.scss';
 type Boot = { status: 'loading' } | { status: 'ready'; world: World } | { status: 'failed' };
 
 // read once: the app has no router, and the two shareable paths never change under it
-const route = routeOf(location.pathname, location.search, import.meta.env.BASE_URL);
+const route = currentRoute();
 
 export function App() {
   const [boot, setBoot] = useState<Boot>({ status: 'loading' });

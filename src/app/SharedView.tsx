@@ -2,10 +2,19 @@ import { useEffect, useState } from 'react';
 import { resolveHandle } from '@/backend/handle';
 import { fetchPublicTrips, fetchSharedContent } from '@/backend/sharing';
 import type { SharedPhoto, SharedTrip } from '@/backend/sharing';
-import { backend } from '@/backend/session';
+import { startBackend } from '@/backend/session';
 import { photoState, profileState } from './profile';
 import type { Route } from './route';
 import './shared.scss';
+
+/**
+ * The visitor's own sign-in, if any: it is what makes 'registered' content visible to them. These
+ * views build no world, so nothing has started the backend before them.
+ */
+const viewerBearer = async (): Promise<string | undefined> => {
+  const back = await startBackend().catch(() => null);
+  return (await back?.auth.accessToken().catch(() => null)) ?? undefined;
+};
 
 /** The flat "not available": a private item, a revoked link, an unknown handle, all alike. */
 export function Away() {
@@ -27,8 +36,7 @@ export function SharedView({ route }: { route: Extract<Route, { kind: 'profile' 
     let live = true;
     void (async () => {
       const ownerId = await resolveHandle(route.handle);
-      // signed in as someone else? the token is what makes 'registered' trips visible
-      const bearer = (await backend()?.auth.accessToken().catch(() => null)) ?? undefined;
+      const bearer = await viewerBearer();
       const list = ownerId ? await fetchPublicTrips(ownerId, bearer) : [];
       if (!live) return;
       setOwner(ownerId);
@@ -68,7 +76,7 @@ export function SharedPhotoView({ route }: { route: Extract<Route, { kind: 'shar
   useEffect(() => {
     let live = true;
     void (async () => {
-      const bearer = (await backend()?.auth.accessToken().catch(() => null)) ?? undefined;
+      const bearer = await viewerBearer();
       const result = await fetchSharedContent(route.owner, 'photo', route.item, {
         ...(route.token === undefined ? {} : { token: route.token }),
         ...(bearer === undefined ? {} : { bearer }),

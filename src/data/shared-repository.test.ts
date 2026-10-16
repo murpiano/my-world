@@ -27,6 +27,8 @@ describe('sharedRepository', () => {
           photos: [{ kind: 'own', id: 'p1', name: 'one.jpg', url: 'https://x/p1' }],
           cityKey: 'lima',
           cityName: 'Lima',
+          cityLat: -12.05,
+          cityLon: -77.04,
           countryId: '604',
           countryName: 'Peru',
         },
@@ -38,6 +40,8 @@ describe('sharedRepository', () => {
     ]);
     expect(data.countries[0]?.cities[0]?.albums[0]?.id).toBe('a1');
     expect(data.countries[0]?.cities[0]?.key).toBe('lima');
+    // where the city really is, not 0°, 0° in the ocean
+    expect(data.countries[0]?.cities[0]).toMatchObject({ lat: -12.05, lon: -77.04 });
   });
 
   it('loads a single album into an archive with no trips', async () => {
@@ -54,6 +58,8 @@ describe('sharedRepository', () => {
         photos: [],
         cityKey: 'lima',
         cityName: 'Lima',
+        cityLat: -12.05,
+        cityLon: -77.04,
         countryId: '604',
         countryName: 'Peru',
       },
@@ -84,6 +90,8 @@ describe('sharedRepository', () => {
         photos: [{ kind: 'own', id: 'p1', name: 'one.jpg', url: 'https://signed/p1' }],
         cityKey: 'lima',
         cityName: 'Lima',
+        cityLat: -12.05,
+        cityLon: -77.04,
         countryId: '604',
         countryName: 'Peru',
       },
@@ -109,6 +117,8 @@ describe('sharedRepository', () => {
           photos: [],
           cityKey: 'lima',
           cityName: 'Lima',
+          cityLat: -12.05,
+          cityLon: -77.04,
           countryId: '604',
           countryName: 'Peru',
         },

@@ -121,6 +121,23 @@ npm run preview   # serve the build
 Needs Node 22.12 or newer. Every push to `main` runs `npm run check`, builds and deploys to
 GitHub Pages (`.github/workflows/deploy.yml`).
 
+### End-to-end tests
+
+The sharing path runs end to end against a local Supabase in Docker, with the migrations and the
+Edge Functions of this checkout — never the real project:
+
+```bash
+npm run db:start                    # local Supabase, only the services the app uses
+npx playwright install chromium     # once
+npm run e2e                         # builds the app against it and drives it in Chromium
+npm run db:stop
+```
+
+An owner opens a trip to everyone, by link and to signed-in people; a stranger, and then another
+account, opens it from the profile or the link and sees the photo load; the owner closes it again
+and the same address says "Not available". Every pull request runs `npm run check`, the visibility
+checks of `supabase/verify-visibility.mjs` and these tests (`.github/workflows/ci.yml`).
+
 ## Where things live
 
 ```text

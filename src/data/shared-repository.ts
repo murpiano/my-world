@@ -28,8 +28,8 @@ const archiveOfAlbum = (shared: SharedAlbum): unknown => ({
         {
           key: shared.cityKey,
           name: shared.cityName,
-          lat: 0,
-          lon: 0,
+          lat: shared.cityLat,
+          lon: shared.cityLon,
           albums: [toAlbumData(shared)],
         },
       ],
@@ -60,7 +60,7 @@ const archiveOfTrip = (
     }
     let city = cities.get(album.cityKey);
     if (!city) {
-      city = { key: album.cityKey, name: album.cityName, lat: 0, lon: 0, albums: [] };
+      city = { key: album.cityKey, name: album.cityName, lat: album.cityLat, lon: album.cityLon, albums: [] };
       cities.set(album.cityKey, city);
       country.cities.push(city);
     }

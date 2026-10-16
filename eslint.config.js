@@ -7,7 +7,16 @@ export default tseslint.config(
   {
     // supabase/functions is Deno, not part of the Vite app: different globals, different
     // module resolution, and `deno lint` is what checks it
-    ignores: ['dist', 'node_modules', '.temp', '.superpowers', 'docs', 'supabase/functions'],
+    ignores: [
+      'dist',
+      'node_modules',
+      '.temp',
+      '.superpowers',
+      'docs',
+      'supabase/functions',
+      'playwright-report',
+      'test-results',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.strict,
@@ -31,6 +40,13 @@ export default tseslint.config(
     },
     rules: {
       'no-console': 'off',
+    },
+  },
+  {
+    // the end-to-end tests drive a browser from Node
+    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    languageOptions: {
+      globals: { ...globals.node },
     },
   },
 );

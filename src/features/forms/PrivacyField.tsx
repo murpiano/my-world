@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { backend } from '@/backend/session';
 import type { VisibilityKind, VisibilityLevel } from '@/backend/types';
 import type { Id } from '@/data/types';
@@ -27,7 +27,11 @@ export function PrivacyField({
   itemId: Id;
   accountId: string;
 }) {
-  const storage = backend()?.storage(accountId);
+  // one storage for the life of the field: a new one each render would read the setting again
+  // after every change, and a read sent before the change lands would undo it on screen
+  const storage = useMemo(() => backend()?.storage(accountId), [accountId]);
+  // once the owner has picked a level, a first read still on its way is out of date
+  const picked = useRef(false);
   const [level, setLevel] = useState<VisibilityLevel>('private');
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -38,7 +42,7 @@ export function PrivacyField({
     let live = true;
     storage.getVisibility(kind, itemId).then(
       (setting) => {
-        if (!live) return;
+        if (!live || picked.current) return;
         setLevel(setting.level);
         setLinkToken(setting.linkToken);
       },
@@ -55,6 +59,7 @@ export function PrivacyField({
 
   const change = async (next: VisibilityLevel) => {
     const was = level;
+    picked.current = true;
     setLevel(next);
     setTrouble(null);
     try {

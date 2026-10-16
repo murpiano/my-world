@@ -1,4 +1,5 @@
 // src/backend/sharing.test.ts
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchPublicTrips, fetchSharedContent } from './sharing';
 
@@ -122,4 +123,30 @@ describe('fetchPublicTrips', () => {
     const [calledUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(calledUrl).toBe('https://proj.supabase.co/functions/v1/public-trips');
   });
+});
+
+describe('the Edge Functions', () => {
+  // a browser first asks which headers it may send. Behind the local stack's gateway the answer
+  // is always yes, so a header missing here would only show on the deployed site
+  it.each(['shared-content', 'public-trips'])(
+    '%s allows every header the page sends',
+    async (fn) => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: () => Promise.resolve({ trips: [] }) });
+      vi.stubGlobal('fetch', fetchMock);
+      await fetchPublicTrips('owner-1');
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const source = readFileSync(
+        new URL(`../../supabase/functions/${fn}/index.ts`, import.meta.url),
+        'utf8',
+      );
+      const allowed = (/'Access-Control-Allow-Headers': '([^']+)'/.exec(source)?.[1] ?? '')
+        .split(',')
+        .map((header) => header.trim().toLowerCase());
+      for (const header of Object.keys(init.headers as Record<string, string>)) {
+        expect(allowed).toContain(header.toLowerCase());
+      }
+    },
+  );
 });

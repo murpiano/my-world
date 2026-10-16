@@ -413,3 +413,12 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# The sharing functions are called by visitors with no account, and the deployed site carries a
+# publishable key, which is not a JWT: the gateway's own JWT check would turn them away. Each
+# function reads the caller's token itself and lets can_view decide what they may see.
+[functions.shared-content]
+verify_jwt = false
+
+[functions.public-trips]
+verify_jwt = false

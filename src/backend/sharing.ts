@@ -17,6 +17,9 @@ export interface SharedAlbum {
   photos: SharedPhoto[];
   cityKey: string;
   cityName: string;
+  /** Where the city is: the globe puts the album's light there and flies the plane to it. */
+  cityLat: number;
+  cityLon: number;
   countryId: string;
   countryName: string;
 }

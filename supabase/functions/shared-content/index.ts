@@ -148,6 +148,8 @@ Deno.serve(async (req) => {
             photos,
             cityKey: city.key,
             cityName: city.name,
+            cityLat: city.lat,
+            cityLon: city.lon,
             countryId: country.id,
             countryName: country.name,
           },
@@ -160,7 +162,16 @@ Deno.serve(async (req) => {
   // kind === 'trip'
   const trip = archive.trips.find((one) => one.id === itemId);
   if (!trip) return notFound();
-  const albums: Array<AlbumData & { cityKey: string; cityName: string; countryId: string; countryName: string }> = [];
+  const albums: Array<
+    AlbumData & {
+      cityKey: string;
+      cityName: string;
+      cityLat: number;
+      cityLon: number;
+      countryId: string;
+      countryName: string;
+    }
+  > = [];
   for (const country of archive.countries) {
     for (const city of country.cities) {
       for (const album of city.albums) {
@@ -173,6 +184,8 @@ Deno.serve(async (req) => {
           photos,
           cityKey: city.key,
           cityName: city.name,
+          cityLat: city.lat,
+          cityLon: city.lon,
           countryId: country.id,
           countryName: country.name,
         });

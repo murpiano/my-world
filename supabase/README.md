@@ -69,6 +69,7 @@ viewer and the link token are passed in explicitly rather than read from `auth.u
 an Edge Function runs with the service-role key and would otherwise look anonymous to the
 database no matter who is actually visiting.
 
-`node supabase/verify-visibility.mjs` checks the whole of it against a project — twenty checks
-over two accounts and an anonymous caller. It needs `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
-`SUPABASE_SERVICE_ROLE_KEY`, and it makes and deletes its own test accounts.
+`node supabase/verify-visibility.mjs` checks the whole of it against a project — twenty-three
+checks over two accounts and an anonymous caller. It needs `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY`, and it makes and deletes its own test accounts. Every pull request
+runs it against a local Supabase (`npm run db:start`), next to the end-to-end tests.

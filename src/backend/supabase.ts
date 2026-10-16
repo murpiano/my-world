@@ -1,33 +1,79 @@
 import type { SupabaseClient, User as AuthUser } from '@supabase/supabase-js';
 import { DEMO_HOME } from '@/data/demo';
 import { cleanPlace } from '@/state/user';
-import type { Account, Auth, Backend, Storage } from './types';
+import { handleSeed } from './handle';
+import type {
+  Account,
+  Auth,
+  Backend,
+  Storage,
+  VisibilityLevel,
+  VisibilitySetting,
+} from './types';
 import type { BackendConfig } from './config';
 
 const BUCKET = 'photos';
 const SIGNED_FOR_S = 7 * 24 * 3600;
 const PAGE = 1000;
 
-const accountOf = (user: AuthUser): Account => {
+const accountOf = async (client: SupabaseClient, user: AuthUser): Promise<Account> => {
   const meta = user.user_metadata as { name?: unknown; home?: unknown };
+  const { data: profile } = await client
+    .from('profiles')
+    .select('handle')
+    .eq('user_id', user.id)
+    .maybeSingle();
   return {
     id: user.id,
     email: user.email ?? '',
     name: typeof meta.name === 'string' ? meta.name : (user.email ?? ''),
     // an account made elsewhere may have no home base yet: the demo's stands in until it is set
     home: cleanPlace(meta.home) ?? DEMO_HOME,
+    handle: (profile as { handle: string } | null)?.handle ?? '',
   };
+};
+
+/** The first free handle from `base`: base, base-2, base-3, ... */
+const uniqueHandle = async (client: SupabaseClient, base: string): Promise<string> => {
+  for (let suffix = 0; ; suffix++) {
+    const candidate = suffix === 0 ? base : `${base}-${suffix + 1}`;
+    const { data } = await client
+      .from('profiles')
+      .select('user_id')
+      .eq('handle', candidate)
+      .maybeSingle();
+    if (!data) return candidate;
+  }
+};
+
+/** Gives an account a handle if it has none yet; called after a sign-up or a first sign-in. */
+const ensureHandle = async (client: SupabaseClient, user: AuthUser): Promise<void> => {
+  const { data: existing } = await client
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (existing) return;
+  const meta = user.user_metadata as { name?: unknown };
+  const name = typeof meta.name === 'string' ? meta.name : '';
+  const handle = await uniqueHandle(client, handleSeed(name));
+  await client.from('profiles').insert({ user_id: user.id, handle });
 };
 
 const fail = (error: { message: string } | null): void => {
   if (error) throw new Error(error.message);
 };
 
-const authOf = (client: SupabaseClient): Auth => ({
+export const authOf = (client: SupabaseClient): Auth => ({
   async session() {
     const { data, error } = await client.auth.getSession();
     fail(error);
-    return data.session ? accountOf(data.session.user) : null;
+    return data.session ? accountOf(client, data.session.user) : null;
+  },
+  async accessToken() {
+    const { data, error } = await client.auth.getSession();
+    fail(error);
+    return data.session?.access_token ?? null;
   },
   async signUp({ email, password, name, home }) {
     const { data, error } = await client.auth.signUp({
@@ -36,29 +82,55 @@ const authOf = (client: SupabaseClient): Auth => ({
       options: { data: { name, home } },
     });
     fail(error);
+    // a confirm-email account has no session yet to write with: its handle waits for first sign-in
+    if (data.session) await ensureHandle(client, data.session.user);
     return data.session ? 'signed-in' : 'confirm-email';
   },
   async signIn(email, password) {
-    const { error } = await client.auth.signInWithPassword({ email, password });
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
     fail(error);
+    if (data.user) await ensureHandle(client, data.user);
   },
   async signOut() {
     const { error } = await client.auth.signOut();
     fail(error);
   },
-  async update({ name, email, home, password }) {
+  async update({ name, email, home, password, handle }) {
     const { error } = await client.auth.updateUser({
       email,
       ...(password ? { password } : {}),
       data: { name, home },
     });
     fail(error);
+    if (!handle) return;
+    const { data: session } = await client.auth.getSession();
+    const accountId = session.session?.user.id;
+    if (!accountId) return;
+    const { error: handleError } = await client
+      .from('profiles')
+      .upsert(
+        { user_id: accountId, handle, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' },
+      );
+    fail(handleError);
   },
 });
 
-const storageOf = (client: SupabaseClient, accountId: string): Storage => {
+export const storageOf = (client: SupabaseClient, accountId: string): Storage => {
   const path = (id: string) => `${accountId}/${id}`;
   const bucket = client.storage.from(BUCKET);
+  const visibilityTable = () => client.from('content_visibility');
+  const readVisibility = async (kind: string, itemId: string): Promise<VisibilitySetting> => {
+    const { data, error } = await visibilityTable()
+      .select('level, link_token')
+      .eq('owner_id', accountId)
+      .eq('kind', kind)
+      .eq('item_id', itemId)
+      .maybeSingle();
+    fail(error);
+    const row = data as { level: VisibilityLevel; link_token: string | null } | null;
+    return { level: row?.level ?? 'private', linkToken: row?.link_token ?? null };
+  };
   return {
     async loadArchive() {
       const { data, error } = await client
@@ -118,6 +190,26 @@ const storageOf = (client: SupabaseClient, accountId: string): Storage => {
       }
       const { error } = await client.from('archives').delete().eq('user_id', accountId);
       fail(error);
+    },
+    getVisibility: (kind, itemId) => readVisibility(kind, itemId),
+    async setVisibility(kind, itemId, level) {
+      const linkToken =
+        level === 'link'
+          ? ((await readVisibility(kind, itemId)).linkToken ?? crypto.randomUUID())
+          : null;
+      const { error } = await visibilityTable().upsert(
+        {
+          owner_id: accountId,
+          kind,
+          item_id: itemId,
+          level,
+          link_token: linkToken,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'owner_id,kind,item_id' },
+      );
+      fail(error);
+      return { level, linkToken };
     },
   };
 };

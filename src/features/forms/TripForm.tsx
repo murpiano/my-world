@@ -7,6 +7,7 @@ import { ConfirmButton } from './ConfirmButton';
 import { endChoiceOf, endpointFor } from './endpoints';
 import type { EndChoice } from './endpoints';
 import { PlaceField } from './PlaceField';
+import { PrivacyField } from './PrivacyField';
 import { Acts, Sheet } from './Sheet';
 import { useEdit } from './useEdit';
 
@@ -105,6 +106,9 @@ export function TripForm({
           ))}
         </div>
       </div>
+      {trip && world.accountId && (
+        <PrivacyField kind="trip" itemId={trip.id} accountId={world.accountId} />
+      )}
       <Acts>
         {trip && (
           <ConfirmButton

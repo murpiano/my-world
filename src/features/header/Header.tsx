@@ -3,6 +3,7 @@ import type { World } from '@/app/boot';
 import { plural } from '@/archive/pages';
 import { journeyStats } from '@/data/stats';
 import { goArchive } from '@/features/archive/links';
+import { currentRoute } from '@/app/route';
 import { appStore } from '@/state/app-state';
 import { openForm, toggleMenu } from '@/state/layers';
 import { ownerStore } from '@/state/owner';
@@ -101,7 +102,11 @@ function NavMenu({ world }: { world: World | null }) {
         >
           Log in
         </button>
-        <p>You are watching a demo traveller. Log in to keep your own trips, albums and photos.</p>
+        <p>
+          {currentRoute().kind === 'shared'
+            ? 'Someone shared this with you. Log in to keep trips, albums and photos of your own.'
+            : 'You are watching a demo traveller. Log in to keep your own trips, albums and photos.'}
+        </p>
         <hr />
         <AboutItem />
       </>

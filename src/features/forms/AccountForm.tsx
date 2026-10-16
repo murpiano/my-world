@@ -7,7 +7,7 @@ import { repository } from '@/state/owner';
 import { saveAccount, userStore } from '@/state/user';
 import { BackupBox } from './BackupBox';
 import { ConfirmButton } from './ConfirmButton';
-import { accountProblem } from './fields';
+import { accountProblem, handleProblem } from './fields';
 import { PlaceField } from './PlaceField';
 import { Acts, Sheet } from './Sheet';
 
@@ -16,6 +16,7 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
   const user = userStore.get().user;
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
+  const [handle, setHandle] = useState(user?.handle ?? '');
   const [pass, setPass] = useState('');
   const [again, setAgain] = useState('');
   const [home, setHome] = useState<PickedPlace | null>(user?.home ?? null);
@@ -23,23 +24,26 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
   const [error, setError] = useState<string | null>(null);
   if (!user) return null;
 
-  const problem = accountProblem({
-    name,
-    email,
-    password: pass,
-    again,
-    home,
-    passwordOptional: true,
-  });
+  const problem =
+    accountProblem({
+      name,
+      email,
+      password: pass,
+      again,
+      home,
+      passwordOptional: true,
+    }) ?? handleProblem(handle);
   const submit = async () => {
     if (problem || !home || busy) return;
     const { name: city, country, countryId, lat, lon } = home;
+    const auth = backend()?.auth;
+    const wanted = handle.trim().toLowerCase();
     const fields = {
       name: name.trim(),
       email: email.trim(),
       home: { name: city, country, countryId, lat, lon },
+      ...(auth && wanted && wanted !== user.handle ? { handle: wanted } : {}),
     };
-    const auth = backend()?.auth;
     if (auth) {
       setBusy(true);
       setError(null);
@@ -83,6 +87,18 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
           onChange={(event) => setEmail(event.target.value)}
         />
       </label>
+      {backend() && (
+        <label className="sheet__field" htmlFor="fHandle">
+          Public handle
+          <input
+            id="fHandle"
+            value={handle}
+            placeholder="your-name"
+            onChange={(event) => setHandle(event.target.value.toLowerCase())}
+          />
+          <small>Your shared trips live at /u/{handle.trim() || 'your-name'}</small>
+        </label>
+      )}
       <div className="sheet__row">
         <label className="sheet__field" htmlFor="fPass">
           New password

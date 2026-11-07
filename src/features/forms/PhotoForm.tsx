@@ -6,7 +6,8 @@ import { photoKey, photoNote } from '@/data/social';
 
 import { ConfirmButton } from './ConfirmButton';
 import { PrivacyField } from './PrivacyField';
-import { Acts, Sheet } from './Sheet';
+import { Acts, Btn, Field, Note, Sheet } from './Sheet';
+import styles from './PhotoForm.module.css';
 import { useEdit } from './useEdit';
 
 /** One photo: its own line, or away with it. */
@@ -30,16 +31,15 @@ export function PhotoForm({
 
   return (
     <Sheet title="Edit photo" onClose={onClose}>
-      {url && <img className="sheet__pic" src={url} alt="" />}
-      <label className="sheet__field" htmlFor="fCap">
-        Caption
+      {url && <img className={styles.pic} src={url} alt="" />}
+      <Field label="Caption" htmlFor="fCap">
         <textarea
           id="fCap"
           placeholder={photoNote(photo)}
           value={caption}
           onChange={(event) => setText(event.target.value)}
         />
-      </label>
+      </Field>
       {photo.kind === 'own' && world.accountId && (
         <PrivacyField kind="photo" itemId={photo.id} accountId={world.accountId} />
       )}
@@ -54,20 +54,17 @@ export function PhotoForm({
             });
           }}
         />
-        <button type="button" className="sheet__btn" onClick={onClose}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="sheet__btn is-main"
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn
+          variant="main"
           onClick={() => {
             run((data) => setCaption(data, albumId, key, caption));
           }}
         >
           Save
-        </button>
+        </Btn>
       </Acts>
-      {trouble && <p className="sheet__note">{trouble}</p>}
+      {trouble && <Note>{trouble}</Note>}
     </Sheet>
   );
 }

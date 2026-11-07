@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import styles from './DropZone.module.css';
 
 /** Photos to add: dropped on the zone, or chosen from the file dialog. */
 export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
@@ -12,7 +13,7 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
   return (
     <button
       type="button"
-      className={`sheet__drop${over ? ' is-over' : ''}`}
+      className={`${styles.drop}${over ? ` ${styles.isOver}` : ''}`}
       onClick={() => input.current?.click()}
       onDragOver={(event) => {
         event.preventDefault();

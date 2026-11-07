@@ -16,7 +16,7 @@ import { commentPhoto, likePhoto, socialFor, socialStore } from '@/state/social'
 import { useStore } from '@/state/store';
 import { indexAt, slidePositions, stepDelta } from './carousel';
 import { flyTransform } from './fit';
-import './lightbox.scss';
+import styles from './Lightbox.module.css';
 
 const ZOOM_MS = 800;
 const SWIPE_PX = 40;
@@ -94,13 +94,13 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
   // closing: the photo flies back into the tile now showing it, or fades if there is none
   useEffect(() => {
     if (!photo.closing) return;
-    const image = stage.current?.querySelector<HTMLImageElement>('.lightbox__slide.is-current');
+    const image = stage.current?.querySelector<HTMLImageElement>('[data-current]');
     // the tile showing this photo now: in the archive when it is open (the panel lies under it)
     const tiles = [
       ...document.querySelectorAll<HTMLElement>(`[data-photo-key="${CSS.escape(key)}"]`),
-    ].filter((element) => !element.closest('.lightbox'));
+    ].filter((element) => !element.closest('[data-lightbox-root]'));
     const tile = appStore.get().archive
-      ? tiles.find((element) => element.closest('.archive'))
+      ? tiles.find((element) => element.closest('[data-archive-root]'))
       : tiles[0];
     if (!image) {
       finishPhoto(appStore);
@@ -131,13 +131,14 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
 
   return (
     <div
-      className={`lightbox${shown && !photo.closing ? ' is-on' : ''}`}
+      className={`${styles.lightbox}${shown && !photo.closing ? ` ${styles.isOn}` : ''}`}
+      data-lightbox-root
       role="dialog"
       aria-label="Photo"
     >
       <button
         type="button"
-        className="lightbox__close"
+        className={styles.close}
         aria-label="Close"
         onClick={() => closePhoto(appStore)}
       >
@@ -146,13 +147,13 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
 
       <div
         ref={stage}
-        className="lightbox__stage"
+        className={styles.stage}
         onClick={close}
         onPointerDown={(event) => {
           // the arrows and the slideshow bar sit on the stage but are not the photo
           const control =
             event.target instanceof Element &&
-            event.target.closest('.lightbox__bar, .lightbox__nav');
+            event.target.closest('[data-lightbox-bar], [data-lightbox-nav]');
           swipe.current = control
             ? null
             : { x: event.clientX, used: false, touch: event.pointerType !== 'mouse' };
@@ -178,7 +179,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
         onPointerCancel={() => setPull(null)}
       >
         <div
-          className={`lightbox__row${pull !== null ? ' is-pulled' : ''}`}
+          className={`${styles.row}${pull !== null ? ` ${styles.isPulled}` : ''}`}
           style={pull !== null ? ({ '--pull': `${pull}px` } as CSSProperties) : undefined}
         >
           {slidePositions(position, count).map((at) => {
@@ -198,7 +199,8 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
           <>
             <button
               type="button"
-              className="lightbox__nav lightbox__nav--prev"
+              className={`${styles.nav} ${styles.prev}`}
+              data-lightbox-nav
               aria-label="Previous photo"
               onClick={(event) => {
                 event.stopPropagation();
@@ -209,7 +211,8 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             </button>
             <button
               type="button"
-              className="lightbox__nav lightbox__nav--next"
+              className={`${styles.nav} ${styles.next}`}
+              data-lightbox-nav
               aria-label="Next photo"
               onClick={(event) => {
                 event.stopPropagation();
@@ -220,11 +223,15 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             </button>
           </>
         )}
-        <div className="lightbox__bar" onClick={(event) => event.stopPropagation()}>
+        <div
+          className={styles.bar}
+          data-lightbox-bar
+          onClick={(event) => event.stopPropagation()}
+        >
           {count > 1 && (
             <button
               type="button"
-              className={photo.slideshow ? 'is-on' : undefined}
+              className={photo.slideshow ? styles.isOn : undefined}
               onClick={() => toggleSlideshow(appStore)}
             >
               {photo.slideshow ? '❚❚ Slideshow' : '▶ Slideshow'}
@@ -252,42 +259,42 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
         </div>
       </div>
 
-      <div className="lightbox__scroll">
-        <aside className="lightbox__info">
+      <div className={styles.scroll}>
+        <aside className={styles.info}>
           <button
             type="button"
-            className="lightbox__country lightbox__link"
+            className={`${styles.country} ${styles.link}`}
             onClick={() => goArchive({ kind: 'country', id: album.city.country.id })}
           >
             {album.city.country.name}
           </button>
           <button
             type="button"
-            className="lightbox__city lightbox__link"
+            className={`${styles.city} ${styles.link}`}
             onClick={() => goArchive({ kind: 'city', key: album.city.key })}
           >
             {album.city.name}
           </button>
           <button
             type="button"
-            className="lightbox__album lightbox__link"
+            className={`${styles.album} ${styles.link}`}
             onClick={() => goArchive({ kind: 'album', id: album.id })}
           >
             {album.title}
           </button>
-          <div className="lightbox__date">
+          <div className={styles.date}>
             {monthYear(album)} · {album.photoCount} photos
           </div>
-          <p className="lightbox__note">{current ? photoNote(current) : ''}</p>
-          <p className="lightbox__desc">{describeAlbum(album)}</p>
-          <p className="lightbox__credit">
+          <p className={styles.note}>{current ? photoNote(current) : ''}</p>
+          <p className={styles.desc}>{describeAlbum(album)}</p>
+          <p className={styles.credit}>
             {current ? creditLine(current, album.city, world.credits) : ''}
           </p>
         </aside>
-        <aside className="lightbox__social">
+        <aside className={styles.social}>
           <button
             type="button"
-            className={`lightbox__like${social.liked ? ' is-on' : ''}`}
+            className={`${styles.like}${social.liked ? ` ${styles.isOn}` : ''}`}
             aria-pressed={social.liked}
             onClick={() => likePhoto(key)}
           >
@@ -295,9 +302,9 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             <span>{social.likes.toLocaleString('en')}</span>
           </button>
           <h4>Comments · {social.comments.length}</h4>
-          <div className="lightbox__comments">
+          <div className={styles.comments}>
             {social.comments.map((comment, i) => (
-              <div key={i} className="lightbox__comment">
+              <div key={i} className={styles.comment}>
                 <b>{comment.who}</b>
                 <small>{comment.when}</small>
                 <p>{comment.text}</p>
@@ -305,7 +312,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             ))}
           </div>
           <CommentForm onSend={(text) => commentPhoto(key, text)} />
-          <div className="lightbox__demo">Demo: comments are not saved yet.</div>
+          <div className={styles.demo}>Demo: comments are not saved yet.</div>
         </aside>
       </div>
     </div>
@@ -320,7 +327,7 @@ function CommentForm({ onSend }: { onSend: (text: string) => void }) {
   };
   return (
     <form
-      className="lightbox__form"
+      className={styles.form}
       onSubmit={(event) => {
         event.preventDefault();
         send();
@@ -369,11 +376,14 @@ function Slide({ src, offset, from }: { src: string | null; offset: number; from
   return (
     <div
       ref={slide}
-      className={`lightbox__slide${offset === 0 ? ' is-current' : distance === 1 ? ' is-near' : ' is-far'}`}
+      className={`${styles.slide}${
+        offset === 0 ? ` ${styles.isCurrent}` : distance === 1 ? ` ${styles.isNear}` : ` ${styles.isFar}`
+      }`}
+      data-current={offset === 0 ? '' : undefined}
       style={{ '--offset': offset } as CSSProperties}
     >
-      {src && <div className="lightbox__backdrop" style={{ backgroundImage: `url("${src}")` }} />}
-      {src && <img className="lightbox__photo" src={src} alt="" draggable={false} />}
+      {src && <div className={styles.backdrop} style={{ backgroundImage: `url("${src}")` }} />}
+      {src && <img className={styles.photo} src={src} alt="" draggable={false} />}
     </div>
   );
 }

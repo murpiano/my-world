@@ -3,6 +3,7 @@ import { visitYears } from '@/data/archive';
 import type { Archive } from '@/data/archive';
 import { appStore } from '@/state/app-state';
 import { useStore } from '@/state/store';
+import styles from './PlaceLabel.module.css';
 
 interface PlaceLabelProps {
   archive: Archive;
@@ -15,7 +16,7 @@ export function PlaceLabel({ archive, ref }: PlaceLabelProps) {
   const city = key === null ? undefined : archive.cityByKey.get(key);
 
   return (
-    <div ref={ref} className="place-label" aria-hidden="true">
+    <div ref={ref} className={styles.label} aria-hidden="true">
       {city && (
         <>
           <b>{city.name}</b>

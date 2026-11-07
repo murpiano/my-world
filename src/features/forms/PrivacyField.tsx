@@ -3,6 +3,7 @@ import { backend } from '@/backend/session';
 import type { VisibilityKind, VisibilityLevel } from '@/backend/types';
 import type { Id } from '@/data/types';
 import { shareLink } from './share-link';
+import { Btn, Field } from './Sheet';
 
 const LABEL: Record<VisibilityLevel, string> = {
   private: 'Private — only me',
@@ -74,7 +75,7 @@ export function PrivacyField({
   const link = shareLink(location.origin, import.meta.env.BASE_URL, accountId, kind, itemId, linkToken);
 
   return (
-    <div className="sheet__field">
+    <Field>
       <label htmlFor={`fPrivacy-${itemId}`}>Who can see it</label>
       <select
         id={`fPrivacy-${itemId}`}
@@ -91,9 +92,7 @@ export function PrivacyField({
         <input readOnly value={link} onFocus={(event) => event.target.select()} />
       )}
       {level === 'link' && link && (
-        <button
-          type="button"
-          className="sheet__btn"
+        <Btn
           onClick={() => {
             navigator.clipboard.writeText(link).then(
               () => {
@@ -105,9 +104,9 @@ export function PrivacyField({
           }}
         >
           {copied ? 'Copied' : 'Copy link'}
-        </button>
+        </Btn>
       )}
       {trouble && <small>{trouble}</small>}
-    </div>
+    </Field>
   );
 }

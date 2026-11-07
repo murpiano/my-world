@@ -5,6 +5,8 @@ import { loadCities } from '@/data/cities';
 import { browsePlaces, searchPlaces } from '@/data/places';
 import type { Listed, PickedPlace } from '@/data/places';
 import { placeLabel } from './fields';
+import { Field } from './Sheet';
+import styles from './PlaceField.module.css';
 
 /** Height of one row, and how many rows past the edge are drawn so a fast scroll shows no gap. */
 const ROW = 46;
@@ -62,6 +64,7 @@ export function PlaceField({
   const [top, setTop] = useState(0);
   const cities = useCities();
   const list = useRef<HTMLDivElement>(null);
+  const listBox = useRef<HTMLDivElement>(null);
   const box = typeof typed === 'string' ? typed : value ? placeLabel(value) : (shown ?? '');
   // a place that is already picked, or a box nobody typed in, shows the whole list, not a search
   const query = typed ?? '';
@@ -95,7 +98,7 @@ export function PlaceField({
   const move = (to: number) => {
     const next = Math.max(0, Math.min(rows - 1, to));
     setActive(next);
-    const box = list.current?.querySelector<HTMLElement>('.sheet__list');
+    const box = listBox.current;
     if (!box) return;
     if (next * ROW < box.scrollTop) box.scrollTop = next * ROW;
     else if ((next + 1) * ROW > box.scrollTop + box.clientHeight) {
@@ -126,8 +129,7 @@ export function PlaceField({
   const visible = Array.from({ length: Math.max(0, last - first) }, (_, k) => first + k);
 
   return (
-    <label className="sheet__field" htmlFor={id}>
-      {label}
+    <Field label={label} htmlFor={id}>
       <input
         id={id}
         autoComplete="off"
@@ -141,7 +143,7 @@ export function PlaceField({
           setOpen(true);
           setActive(0);
           setTop(0);
-          list.current?.querySelector('.sheet__list')?.scrollTo({ top: 0 });
+          listBox.current?.scrollTo({ top: 0 });
           onPick(null);
         }}
         onFocus={(event) => {
@@ -155,12 +157,13 @@ export function PlaceField({
         }}
         onKeyDown={onKeyDown}
       />
-      <span className="sheet__chev" aria-hidden="true" />
+      <span className={styles.chev} aria-hidden="true" />
       {open && rows > 0 && (
-        <div className="sheet__drop-wrap" ref={list}>
+        <div className={styles.dropWrap} ref={list}>
           <div
             id={`${id}-list`}
-            className="sheet__list"
+            className={styles.list}
+            ref={listBox}
             role="listbox"
             onScroll={(event) => setTop(event.currentTarget.scrollTop)}
           >
@@ -174,7 +177,7 @@ export function PlaceField({
                     type="button"
                     role="option"
                     aria-selected={index === active}
-                    className={index === active ? 'is-active' : undefined}
+                    className={index === active ? styles.isActive : undefined}
                     style={{ top: index * ROW, height: ROW }}
                     // pointerdown, not click: the field's blur would take the list away first
                     onPointerDown={(event) => {
@@ -207,6 +210,6 @@ export function PlaceField({
           </div>
         </div>
       )}
-    </label>
+    </Field>
   );
 }

@@ -8,7 +8,8 @@ import { endChoiceOf, endpointFor } from './endpoints';
 import type { EndChoice } from './endpoints';
 import { PlaceField } from './PlaceField';
 import { PrivacyField } from './PrivacyField';
-import { Acts, Sheet } from './Sheet';
+import { Acts, Btn, Field, Note, Sheet } from './Sheet';
+import styles from './TripForm.module.css';
 import { useEdit } from './useEdit';
 
 /** New or edit: a name, where it starts and ends, and the albums that belong to it. */
@@ -59,15 +60,14 @@ export function TripForm({
       lead="A name, where it starts and ends, and the albums that belong to it."
       onClose={onClose}
     >
-      <label className="sheet__field" htmlFor="fName">
-        Name
+      <Field label="Name" htmlFor="fName">
         <input
           id="fName"
           placeholder="Summer holiday 2023"
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-      </label>
+      </Field>
       <PlaceField
         id="fStart"
         label="Starts from"
@@ -86,9 +86,9 @@ export function TripForm({
         home={{ label: homeLabel, onPick: () => setEnd('home') }}
         onPick={(place) => place && setEnd(place)}
       />
-      <div className="sheet__field">
+      <Field>
         Albums
-        <div className="sheet__checks">
+        <div className={styles.checks}>
           {newest.map((album) => (
             <label key={album.id}>
               <input
@@ -105,7 +105,7 @@ export function TripForm({
             </label>
           ))}
         </div>
-      </div>
+      </Field>
       {trip && world.accountId && (
         <PrivacyField kind="trip" itemId={trip.id} accountId={world.accountId} />
       )}
@@ -119,19 +119,12 @@ export function TripForm({
             }}
           />
         )}
-        <button type="button" className="sheet__btn" onClick={onClose}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="sheet__btn is-main"
-          disabled={!name.trim()}
-          onClick={submit}
-        >
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn variant="main" disabled={!name.trim()} onClick={submit}>
           {trip ? 'Save' : 'Create trip'}
-        </button>
+        </Btn>
       </Acts>
-      {trouble && <p className="sheet__note">{trouble}</p>}
+      {trouble && <Note>{trouble}</Note>}
     </Sheet>
   );
 }

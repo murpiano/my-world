@@ -6,7 +6,7 @@ import type { World } from './boot';
 import { Away, SharedPhotoView, SharedView } from './SharedView';
 import { Splash } from './Splash';
 import { Stage } from './Stage';
-import './app.scss';
+import styles from './App.module.css';
 
 type Boot = { status: 'loading' } | { status: 'ready'; world: World } | { status: 'failed' };
 
@@ -54,7 +54,7 @@ export function App() {
       {boot.status === 'ready' && stageUp && <Stage world={boot.world} />}
       {boot.status !== 'failed' && <Splash ready={boot.status === 'ready'} onRelease={letIn} />}
       {boot.status === 'failed' && (
-        <div className="boot" role="alert">
+        <div className={styles.boot} role="alert">
           <p>The map did not load.</p>
           <button type="button" onClick={() => location.reload()}>
             Try again

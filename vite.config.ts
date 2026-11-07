@@ -26,13 +26,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: '@use "@/styles/helpers" as *;\n',
-      },
-    },
-  },
   server: {
     host: '127.0.0.1',
     port: 3001,

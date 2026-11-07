@@ -1,32 +1,4 @@
-.globe-stage {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-
-  canvas {
-    position: absolute;
-    inset: 0;
-    display: block;
-  }
-
-  &__stars {
-    inset: auto;
-    top: -30px;
-    left: -30px;
-    will-change: transform;
-  }
-
-  &__sky {
-    pointer-events: none;
-  }
-
-  &__globe {
-    cursor: grab;
-    touch-action: none;
-  }
-}
-
-.place-label {
+.label {
   position: fixed;
   top: 0;
   left: 0;
@@ -53,7 +25,7 @@
     font-size: 11px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--lamp);
+    color: var(--accent);
     text-shadow: 0 1px 6px rgb(0 0 0 / 90%);
   }
 }

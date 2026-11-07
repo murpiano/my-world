@@ -13,3 +13,4 @@ test-results/
 .env*
 !.env.example
 .DS_Store
+.kysaro/*.md

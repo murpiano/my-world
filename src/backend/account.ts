@@ -19,6 +19,9 @@ export const friendlyError = (message: string): string => {
   if (text.includes('already registered'))
     return 'That email already has an account. Log in instead.';
   if (text.includes('rate limit')) return 'Too many tries. Wait a little and try again.';
+  if (text.includes('profiles_handle_key') || (text.includes('duplicate key') && text.includes('handle'))) {
+    return 'That handle is taken. Try another.';
+  }
   if (text.includes('failed to fetch') || text.includes('network')) {
     return 'The server cannot be reached. Check the connection and try again.';
   }

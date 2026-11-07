@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountProblem,
+  handleProblem,
   signInProblem,
   dateInput,
   parseDate,
@@ -64,5 +65,29 @@ describe('signInProblem', () => {
     expect(signInProblem('ann@example.com', 'x')).toBeNull();
     expect(signInProblem('ann', 'x')).toMatch(/email/);
     expect(signInProblem('ann@example.com', '')).toMatch(/password/);
+  });
+});
+
+describe('handleProblem', () => {
+  it('passes a plain handle', () => {
+    expect(handleProblem('ivan-petrov')).toBeNull();
+  });
+
+  it('passes an empty handle, since it only means "leave it as it is"', () => {
+    expect(handleProblem('')).toBeNull();
+  });
+
+  it('asks for at least three characters', () => {
+    expect(handleProblem('ab')).toMatch(/three/);
+  });
+
+  it('turns down characters a URL would mangle', () => {
+    expect(handleProblem('ivan petrov')).toMatch(/letters, numbers/);
+    expect(handleProblem('ivan_petrov')).toMatch(/letters, numbers/);
+    expect(handleProblem('Ivan')).toMatch(/letters, numbers/);
+  });
+
+  it('turns down more than thirty characters', () => {
+    expect(handleProblem('a'.repeat(31))).toMatch(/thirty/);
   });
 });

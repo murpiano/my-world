@@ -19,7 +19,7 @@ import {
   timeAt,
   within,
 } from '@/timeline/range';
-import './timeline.scss';
+import styles from './Timeline.module.css';
 
 const NOTE_MS = 1800;
 /** A press moves this far before it counts as a drag. */
@@ -245,16 +245,16 @@ export function Timeline({ archive }: { archive: Archive }) {
       : [];
 
   return (
-    <div className={`timeline${zoomed ? ' timeline--zoom' : ''}`}>
-      <div className="timeline__chips">
+    <div className={`${styles.timeline}${zoomed ? ` ${styles.zoom}` : ''}`}>
+      <div className={styles.chips}>
         {zoomed && (
-          <button type="button" className="timeline__shrink" onClick={() => setGrown(false)}>
+          <button type="button" className={styles.shrink} onClick={() => setGrown(false)}>
             Done
           </button>
         )}
         <button
           type="button"
-          className={`timeline__chip${chip ? ' is-on' : ''}`}
+          className={`${styles.chip}${chip ? ` ${styles.isOn}` : ''}`}
           onClick={() => director.clearRange()}
           tabIndex={range ? 0 : -1}
           aria-label={range ? `Clear the range ${rangeLabel(range)}` : undefined}
@@ -262,10 +262,10 @@ export function Timeline({ archive }: { archive: Archive }) {
           {chip}
         </button>
       </div>
-      <div className="timeline__row">
+      <div className={styles.row}>
         <button
           type="button"
-          className="timeline__play"
+          className={styles.play}
           // while the strip is grown the range is being chosen: Done gives play back
           disabled={zoomed}
           onClick={() => director.play()}
@@ -273,10 +273,10 @@ export function Timeline({ archive }: { archive: Archive }) {
         >
           {playing ? '❚❚' : '▶'}
         </button>
-        <div ref={scroller} className="timeline__scroll">
+        <div ref={scroller} className={styles.scroll}>
           <div
             ref={track}
-            className="timeline__track"
+            className={styles.track}
             style={{ '--years': years.length } as CSSProperties}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -285,7 +285,7 @@ export function Timeline({ archive }: { archive: Archive }) {
             onPointerLeave={() => setTip(null)}
           >
             <div
-              className={`timeline__band${live ? ' is-on' : ''}${picking ? ' is-pending' : ''}`}
+              className={`${styles.band}${live ? ` ${styles.isOn}` : ''}${picking ? ` ${styles.isPending}` : ''}`}
               style={
                 live
                   ? {
@@ -295,23 +295,19 @@ export function Timeline({ archive }: { archive: Archive }) {
                   : undefined
               }
             />
-            <div className="timeline__base" />
-            <div className="timeline__done" style={{ left: `${from}%`, width: `${done}%` }} />
+            <div className={styles.base} />
+            <div className={styles.done} style={{ left: `${from}%`, width: `${done}%` }} />
             {years.slice(1).map((year) => (
-              <div
-                key={`sep-${year}`}
-                className="timeline__sep"
-                style={{ left: `${pos(year)}%` }}
-              />
+              <div key={`sep-${year}`} className={styles.sep} style={{ left: `${pos(year)}%` }} />
             ))}
             {times.map((t, k) => {
               const past = isReached(k, t, progressState);
               const inLive = live !== null && within(t, live);
               const classes = [
-                'timeline__dot',
-                past ? 'is-past' : '',
-                !past && inLive ? 'is-ahead' : '',
-                live && !inLive && !past ? 'is-out' : '',
+                styles.dot,
+                past ? styles.isPast : '',
+                !past && inLive ? styles.isAhead : '',
+                live && !inLive && !past ? styles.isOut : '',
               ].join(' ');
               return <div key={k} className={classes} style={{ left: `${pos(t)}%` }} />;
             })}
@@ -320,20 +316,20 @@ export function Timeline({ archive }: { archive: Archive }) {
                 key={year}
                 type="button"
                 className={[
-                  'timeline__year',
-                  year === focusYear ? 'is-current' : '',
-                  range && range.lo < year + 1 && range.hi >= year ? 'is-in' : '',
+                  styles.year,
+                  year === focusYear ? styles.isCurrent : '',
+                  range && range.lo < year + 1 && range.hi >= year ? styles.isIn : '',
                 ].join(' ')}
                 style={{ left: `${pos(year + 0.5)}%` }}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => onYear(year)}
               >
-                <span className="timeline__full">{year}</span>
-                <span className="timeline__short">’{String(year).slice(2)}</span>
+                <span className={styles.full}>{year}</span>
+                <span className={styles.short}>’{String(year).slice(2)}</span>
               </button>
             ))}
             <div
-              className="timeline__knob"
+              className={styles.knob}
               style={{
                 left: `${focusTime === undefined ? 0 : pos(focusTime)}%`,
                 opacity: focusTime === undefined ? 0 : 1,
@@ -343,7 +339,7 @@ export function Timeline({ archive }: { archive: Archive }) {
               ends.map((end) => (
                 <div
                   key={end.id}
-                  className="timeline__handle"
+                  className={styles.handle}
                   style={{ left: `${pos(end.t)}%` }}
                   onPointerDown={(event) => startHandle(event, end.id)}
                   onPointerMove={moveHandle}
@@ -355,7 +351,7 @@ export function Timeline({ archive }: { archive: Archive }) {
                 />
               ))}
             {tip && (
-              <div className="timeline__tip" style={{ left: `${tip.left}%` }}>
+              <div className={styles.tip} style={{ left: `${tip.left}%` }}>
                 {tip.text}
               </div>
             )}

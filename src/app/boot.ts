@@ -15,12 +15,17 @@ import { userStore } from '@/state/user';
 import type { Light, LightRow } from '@/render/lights';
 
 export { demoUrl };
+export { routeOf } from './route';
+import type { Route } from './route';
+export type { Route };
 
 export interface World {
   earth: EarthGeo;
   lights: Light[];
   archive: Archive;
   home: Place;
+  /** The signed-in account, when a backend holds this archive; null otherwise. */
+  accountId: string | null;
   /** Photo credits of the demo, by file name. */
   credits: ReadonlyMap<string, Credit>;
 }
@@ -34,19 +39,50 @@ const fetchJson = async <T>(path: string): Promise<T> => {
 };
 
 /** Loads the world map and the archive: the demo traveller, or the owner's own. */
-export const loadWorld = async (): Promise<World> => {
+export const loadWorld = async (route: Route = { kind: 'app' }): Promise<World> => {
   const [topology, credits, rows] = await Promise.all([
     fetchJson<WorldTopology>('countries-110m.json'),
     fetchJson<Credit[]>('photos.json'),
     fetchJson<LightRow[]>('lights.json'),
   ]);
   const earth = earthFromTopology(topology);
+
+  // a shared trip or album: the same globe, from the one subtree the owner opened, read-only.
+  // A lone shared photo never gets here — App renders it as a picture, with no world at all.
+  if (route.kind === 'shared' && route.content !== 'photo') {
+    const shared = await startBackend().catch(() => null);
+    // a visitor who happens to be signed in is a 'registered' viewer; the token says so
+    const bearer = (await shared?.auth.accessToken().catch(() => null)) ?? undefined;
+    const { sharedRepository } = await import('@/data/shared-repository');
+    const repo = sharedRepository(route.owner, route.content, route.item, {
+      ...(route.token === undefined ? {} : { token: route.token }),
+      ...(bearer === undefined ? {} : { bearer }),
+    });
+    const archive = linkArchive(await repo.load());
+    setSource(archive, repo);
+    return {
+      earth,
+      lights: lightsFromRows(rows),
+      archive,
+      home: DEMO_HOME,
+      accountId: null,
+      credits: new Map(credits.map((credit) => [credit.file, credit])),
+    };
+  }
+
   // with a backend the account is whoever the backend says is signed in; without one, the browser
   const back = await startBackend().catch(() => null);
   const account = back ? await back.auth.session().catch(() => null) : null;
   if (back) {
     userStore.set({
-      user: account ? { name: account.name, email: account.email, home: account.home } : null,
+      user: account
+        ? {
+            name: account.name,
+            email: account.email,
+            home: account.home,
+            handle: account.handle,
+          }
+        : null,
     });
   }
   const { user } = userStore.get();
@@ -64,6 +100,7 @@ export const loadWorld = async (): Promise<World> => {
     lights: lightsFromRows(rows),
     archive,
     home: user?.home ?? DEMO_HOME,
+    accountId: back && account ? account.id : null,
     credits: new Map(credits.map((credit) => [credit.file, credit])),
   };
 };

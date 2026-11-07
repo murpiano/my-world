@@ -1,4 +1,5 @@
 import { GLASS, HOUSE, ROOF } from '@/render/house';
+import styles from './HouseIcon.module.css';
 
 const points = HOUSE.parts
   .flatMap((part) => part.d.match(/-?[\d.]+ -?[\d.]+/g) ?? [])
@@ -16,7 +17,7 @@ const box = [
 export function HouseIcon() {
   const [[x1, y1], [x2, y2]] = HOUSE.roof;
   return (
-    <svg className="header__house" viewBox={box.join(' ')} aria-hidden="true">
+    <svg className={styles.house} viewBox={box.join(' ')} aria-hidden="true">
       <defs>
         <linearGradient id="menu-roof" gradientUnits="userSpaceOnUse" x1={x1} y1={y1} x2={x2} y2={y2}>
           <stop offset="0" stopColor="#5b44ab" />

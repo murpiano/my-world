@@ -1,5 +1,6 @@
 import { backend } from '@/backend/session';
-import { Acts, Sheet } from './Sheet';
+import { Acts, Btn, Sheet } from './Sheet';
+import styles from './AboutForm.module.css';
 
 const link = (href: string, text: string) => (
   <a href={href} target="_blank" rel="noopener noreferrer">
@@ -11,7 +12,7 @@ const link = (href: string, text: string) => (
 export function AboutForm({ onClose }: { onClose: () => void }) {
   return (
     <Sheet title="My World" lead="Memories of the places I've been." onClose={onClose}>
-      <div className="about">
+      <div className={styles.about}>
         <section>
           <h4>Made by</h4>
           <p>
@@ -59,9 +60,9 @@ export function AboutForm({ onClose }: { onClose: () => void }) {
         </section>
       </div>
       <Acts>
-        <button type="button" className="sheet__btn is-main" onClick={onClose}>
+        <Btn variant="main" onClick={onClose}>
           Close
-        </button>
+        </Btn>
       </Acts>
     </Sheet>
   );

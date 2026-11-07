@@ -20,7 +20,12 @@ export const cleanUser = (raw: unknown): User | null => {
   if (!isObject(raw)) return null;
   const home = cleanPlace(raw.home);
   if (typeof raw.name !== 'string' || typeof raw.email !== 'string' || !home) return null;
-  return { name: raw.name, email: raw.email, home };
+  return {
+    name: raw.name,
+    email: raw.email,
+    home,
+    ...(typeof raw.handle === 'string' ? { handle: raw.handle } : {}),
+  };
 };
 
 export const userStore = createStore<{ user: User | null }>({

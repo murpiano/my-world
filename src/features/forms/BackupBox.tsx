@@ -5,6 +5,8 @@ import type { Backup } from '@/data/backup';
 import { plural } from '@/archive/pages';
 import { backend } from '@/backend/session';
 import { repository } from '@/state/owner';
+import { Acts, Btn, Note } from './Sheet';
+import styles from './BackupBox.module.css';
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
@@ -68,39 +70,32 @@ export function BackupBox({ archive }: { archive: Archive }) {
   const photos = kept?.reduce((sum, album) => sum + album.photos.length, 0) ?? 0;
 
   return (
-    <div className="sheet__backup">
+    <div className={styles.backup}>
       <h4>Backup</h4>
-      <p className="sheet__note">
+      <Note>
         {backend()
           ? 'Your archive is kept with your account. Download a copy now and then for yourself.'
           : 'Your archive is kept in this browser only. Download a copy now and then, or to move it to another browser or computer.'}
-      </p>
+      </Note>
       {pending ? (
-        <div className="sheet__acts">
-          <span className="sheet__ask">
+        <Acts className={styles.acts}>
+          <span className={styles.ask}>
             Replace everything you have with this backup ({plural(albums, 'album')},{' '}
             {plural(photos, 'photo')})?
           </span>
-          <button type="button" className="sheet__btn" onClick={() => setPending(null)}>
-            Keep mine
-          </button>
-          <button type="button" className="sheet__btn is-main" disabled={busy} onClick={restore}>
+          <Btn onClick={() => setPending(null)}>Keep mine</Btn>
+          <Btn variant="main" disabled={busy} onClick={restore}>
             Replace
-          </button>
-        </div>
+          </Btn>
+        </Acts>
       ) : (
-        <div className="sheet__acts">
-          <button type="button" className="sheet__btn" disabled={busy} onClick={save}>
+        <Acts className={styles.acts}>
+          <Btn disabled={busy} onClick={save}>
             Download backup
-          </button>
-          <button
-            type="button"
-            className="sheet__btn"
-            disabled={busy}
-            onClick={() => picker.current?.click()}
-          >
+          </Btn>
+          <Btn disabled={busy} onClick={() => picker.current?.click()}>
             Restore from backup
-          </button>
+          </Btn>
           <input
             ref={picker}
             type="file"
@@ -111,9 +106,9 @@ export function BackupBox({ archive }: { archive: Archive }) {
               event.target.value = '';
             }}
           />
-        </div>
+        </Acts>
       )}
-      {note && <p className="sheet__note">{note}</p>}
+      {note && <Note>{note}</Note>}
     </div>
   );
 }

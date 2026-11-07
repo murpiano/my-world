@@ -1,0 +1,550 @@
+.panel {
+  position: fixed;
+  top: 100px;
+  left: var(--space-24);
+  z-index: 5;
+  width: min(360px, 30vw);
+  pointer-events: none;
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+
+  /* the cards are moving to the other end of a phone screen: gone first, then back */
+  &.isAway {
+    opacity: 0;
+    transition-duration: 0.45s;
+  }
+
+  &.isHidden {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+.years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-16);
+  margin-bottom: var(--space-48);
+  pointer-events: auto;
+
+  button,
+  span {
+    padding: 2px 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    transition:
+      color 0.5s,
+      border-color 0.5s;
+  }
+
+  button:hover {
+    color: var(--text);
+  }
+
+  .current {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+/* only on a phone: a keyboard has Esc for this */
+.close {
+  display: none;
+}
+
+@media (width <= 767px) {
+  .close {
+    position: absolute;
+    z-index: 3;
+    top: -6px;
+    right: 0;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgb(127 137 163 / 35%);
+    border-radius: 50%;
+    background: rgb(12 16 30 / 80%);
+    font-size: 14px;
+    color: var(--text);
+    pointer-events: auto;
+  }
+
+  .panel {
+    top: 80px;
+    right: var(--space-16);
+    left: var(--space-16);
+    display: flex;
+    gap: var(--space-12);
+    align-items: flex-end;
+    width: auto;
+
+    /* the plane is flying over the top: the cards step down out of its way, above the timeline */
+    &.isLow {
+      top: auto;
+      bottom: 110px;
+    }
+  }
+
+  .media {
+    flex: 0 0 44%;
+  }
+
+  .years {
+    gap: 2px var(--space-8);
+    margin-bottom: var(--space-24);
+
+    button,
+    span {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+    }
+  }
+}
+
+/* the albums: the current one in front; the previous and next peek out above and below on hover */
+.stack {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  pointer-events: auto;
+  /* the albums take vertical swipes themselves; the browser must not pan the page instead */
+  touch-action: none;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #0b1020;
+  box-shadow:
+    0 24px 50px rgb(0 0 0 / 50%),
+    0 0 0 1px rgb(255 255 255 / 6%);
+  cursor: pointer;
+  transition:
+    transform 0.7s var(--ease),
+    opacity 0.6s ease,
+    filter 0.6s ease,
+    box-shadow 0.6s ease;
+
+  &.cur {
+    z-index: 3;
+  }
+
+  &.prev,
+  &.next {
+    z-index: 2;
+    opacity: 0;
+    filter: brightness(0.6) saturate(0.85);
+    transform: scale(0.9);
+    box-shadow:
+      0 14px 30px rgb(0 0 0 / 50%),
+      0 0 0 1px rgb(255 200 107 / 30%);
+  }
+
+  &.far {
+    z-index: 1;
+    opacity: 0;
+    transform: scale(0.84);
+    pointer-events: none;
+  }
+
+  &.end {
+    cursor: default;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    height: 38%;
+    background: linear-gradient(rgb(4 6 13 / 70%), transparent);
+    opacity: 0;
+    transition: opacity 0.45s;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 60%, rgb(4 6 13 / 60%));
+    pointer-events: none;
+  }
+}
+
+/* the pictures drift a little after the cursor */
+.pan {
+  position: absolute;
+  inset: -16px;
+  transform: translate(var(--px, 0px), var(--py, 0px));
+  transition: transform 0.9s var(--ease);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    opacity: 0;
+    transform: scale(1.02);
+    transition:
+      opacity 1.4s ease,
+      transform 7s linear;
+
+    &.isUnder {
+      z-index: 0;
+      opacity: 1;
+      transform: scale(1.08);
+      transition: none;
+    }
+
+    &.isOn {
+      z-index: 1;
+      opacity: 1;
+      transform: scale(1.08);
+    }
+  }
+}
+
+.title {
+  position: absolute;
+  top: var(--space-12);
+  right: var(--space-12);
+  left: var(--space-12);
+  z-index: 2;
+  font-family: var(--font-family-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1.15;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s var(--ease);
+  pointer-events: none;
+
+  small {
+    display: block;
+    margin-top: 3px;
+    font-family: var(--font-family-base);
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+}
+
+/* the edge of a neighbouring album carries its name */
+.name {
+  position: absolute;
+  right: var(--space-12);
+  left: var(--space-12);
+  z-index: 2;
+  overflow: hidden;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text);
+  text-shadow: 0 1px 6px rgb(0 0 0 / 90%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.card.prev .name {
+  top: var(--space-8);
+  opacity: 1;
+}
+
+.card.next .name {
+  bottom: var(--space-8);
+  opacity: 1;
+}
+
+.credit {
+  position: absolute;
+  right: var(--space-12);
+  bottom: var(--space-8);
+  left: var(--space-12);
+  z-index: 2;
+  overflow: hidden;
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgb(232 236 246 / 70%);
+}
+
+.card.next .credit {
+  opacity: 0;
+}
+
+.count {
+  position: absolute;
+  top: var(--space-12);
+  right: var(--space-12);
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgb(232 236 246 / 75%);
+  opacity: 0;
+  transition: opacity 0.45s;
+}
+
+.stack:hover {
+  .card.cur {
+    transform: scale(1.012);
+    box-shadow:
+      0 30px 60px rgb(0 0 0 / 60%),
+      0 0 0 1px rgb(255 200 107 / 35%);
+  }
+
+  .card.prev {
+    opacity: 1;
+    transform: translateY(calc(-5% - 34px)) scale(0.9);
+  }
+
+  .card.next {
+    opacity: 1;
+    transform: translateY(calc(5% + 34px)) scale(0.9);
+  }
+
+  .card.prev:hover,
+  .card.next:hover {
+    filter: brightness(0.85);
+  }
+
+  .card.cur::before,
+  .card.cur .title {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* with a mouse, the title on the cover opens the album */
+@media (hover: hover) {
+  .stack:hover .card.cur .title {
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+}
+
+.stack.isMulti:not(:hover) .card.cur .count {
+  opacity: 1;
+}
+
+/* coming home: the same quiet room for every trip */
+.cozy {
+  width: 100%;
+  height: 100%;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/*
+ * cozy-room.svg is injected as raw markup (dangerouslySetInnerHTML), so its
+ * class names are not processed by CSS Modules — :global() keeps them
+ * matching the literal names baked into the SVG file.
+ */
+:global(.cz-f) {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cozy-flame 1.1s ease-in-out infinite alternate;
+}
+
+:global(.cz-f2) {
+  animation-duration: 0.8s;
+  animation-delay: -0.3s;
+}
+
+:global(.cz-s) {
+  opacity: 0;
+  animation: cozy-steam 3.2s ease-in-out infinite;
+}
+
+:global(.cz-s2) {
+  animation-delay: 1.6s;
+}
+
+:global(.cz-g) {
+  animation: cozy-glow 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes cozy-flame {
+  0% {
+    transform: scale(1, 1) skewX(0);
+  }
+
+  50% {
+    transform: scale(0.96, 1.08) skewX(-4deg);
+  }
+
+  100% {
+    transform: scale(1.03, 0.94) skewX(3deg);
+  }
+}
+
+@keyframes cozy-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  35% {
+    opacity: 0.75;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes cozy-glow {
+  from {
+    opacity: 0.8;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.caption {
+  margin-top: var(--space-48);
+  animation: caption-in 0.6s ease both;
+}
+
+.when {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.place {
+  display: inline-block;
+  margin-top: var(--space-8);
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-family: var(--font-family-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(40px, 5vw, 76px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: inherit;
+  pointer-events: auto;
+  transition: color 0.3s;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.route {
+  margin-top: var(--space-12);
+  font-size: 13px;
+  color: var(--muted);
+
+  span {
+    font-weight: 500;
+    color: var(--text);
+  }
+}
+
+.trip {
+  min-height: 18px;
+  margin-top: var(--space-8);
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.status {
+  min-height: 16px;
+  margin-top: var(--space-8);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (width <= 767px) {
+  .caption {
+    min-width: 0;
+    margin-top: 0;
+  }
+
+  .when {
+    letter-spacing: 0.14em;
+  }
+
+  .place {
+    font-size: 34px;
+  }
+
+  .route,
+  .status {
+    display: none;
+  }
+}
+
+/* the caption's names open their archive pages; they read as text until hovered */
+.link {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  color: inherit;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+
+  &:hover {
+    border-color: rgb(255 200 107 / 50%);
+    color: var(--accent);
+  }
+
+  &.strong {
+    font-weight: 500;
+    color: var(--text);
+  }
+}
+
+.route,
+.trip {
+  pointer-events: auto;
+}
+
+@keyframes caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -46,6 +46,21 @@ export const accountProblem = (fields: {
   return null;
 };
 
+/**
+ * What is wrong with a public handle, in the same words the database's own rule enforces
+ * (`^[a-z0-9-]{3,30}$`). Empty means "leave the handle alone", which is always fine.
+ */
+export const handleProblem = (handle: string): string | null => {
+  const wanted = handle.trim();
+  if (wanted === '') return null;
+  if (wanted.length < 3) return 'A handle needs at least three characters.';
+  if (wanted.length > 30) return 'A handle can be at most thirty characters.';
+  if (!/^[a-z0-9-]+$/.test(wanted)) {
+    return 'A handle takes lowercase letters, numbers and hyphens only.';
+  }
+  return null;
+};
+
 /** What is wrong with a sign-in: only the pair is needed, and the service checks the password. */
 export const signInProblem = (email: string, password: string): string | null => {
   if (!MAIL.test(email.trim())) return 'Enter an email like name@example.com.';

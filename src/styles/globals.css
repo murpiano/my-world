@@ -1,0 +1,30 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  /* The page never scrolls: no gutter, or the full-screen globe loses a strip on the right. */
+  scrollbar-gutter: auto;
+  background-color: var(--bg);
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family: var(--font-family-base);
+  font-size: 14px;
+  color: var(--text);
+  background-color: var(--bg);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  color: inherit;
+}

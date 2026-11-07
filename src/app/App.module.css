@@ -1,0 +1,18 @@
+.boot {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: var(--space-12);
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+
+  button {
+    justify-self: center;
+    padding: var(--space-8) var(--space-16);
+    border: 1px solid rgb(127 137 163 / 35%);
+    border-radius: 999px;
+    background: rgb(12 16 30 / 60%);
+  }
+}

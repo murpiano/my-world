@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+playwright-report/
+test-results/
 
 .temp/
 *Zone.Identifier
@@ -11,3 +13,4 @@ coverage/
 .env*
 !.env.example
 .DS_Store
+.kysaro/*.md

@@ -18,7 +18,7 @@ import type { Tour } from '@/tour/tour';
 import cozyRoom from './cozy-room.svg?raw';
 import { cardRole, wheelSteps } from './stack';
 import type { CardRole } from './stack';
-import './panel.scss';
+import styles from './AlbumPanel.module.css';
 
 /** Each photo dissolves into the next over this time. */
 const DISSOLVE_MS = 1400;
@@ -54,9 +54,12 @@ export function AlbumPanel({ world }: { world: World }) {
   const list = album ? scopedAlbums(cityAlbums(archive, album.city.key), tour) : [];
 
   return (
-    <section className={`panel${album ? '' : ' is-hidden'}${placed.low ? ' is-low' : ''}${placed.away ? ' is-away' : ''}`} aria-label="The place in focus">
+    <section
+      className={`${styles.panel}${album ? '' : ` ${styles.isHidden}`}${placed.low ? ` ${styles.isLow}` : ''}${placed.away ? ` ${styles.isAway}` : ''}`}
+      aria-label="The place in focus"
+    >
       {album && <LetGo />}
-      <div className="panel__media">
+      <div className={styles.media}>
         {album && <PanelHead archive={archive} list={list} focus={focus} scope={scope} />}
         {album && endCard && <EndSlot world={world} />}
         {album && !endCard && <AlbumStack world={world} list={list} focus={focus} />}
@@ -72,7 +75,7 @@ function LetGo() {
   return (
     <button
       type="button"
-      className="panel__close"
+      className={styles.close}
       aria-label="Let go of this place"
       onClick={() => director.escape()}
     >
@@ -96,10 +99,10 @@ function PanelHead({
   const director = useDirector();
   if (scope) {
     return (
-      <div className="panel__years">
+      <div className={styles.years}>
         <button
           type="button"
-          className="is-current"
+          className={styles.current}
           onClick={() =>
             goArchive(
               scope.kind === 'year' && scope.year !== null
@@ -120,12 +123,12 @@ function PanelHead({
     ...new Set(list.map((i) => archive.albums[i]?.year).filter((y): y is number => y !== undefined)),
   ];
   return (
-    <div className="panel__years">
+    <div className={styles.years}>
       {years.map((year) => (
         <button
           key={year}
           type="button"
-          className={year === current ? 'is-current' : undefined}
+          className={year === current ? styles.current : undefined}
           onClick={() => {
             // a second click on the current year opens the city in the archive
             const album = archive.albums[focus];
@@ -198,7 +201,7 @@ function AlbumStack({ world, list, focus }: { world: World; list: number[]; focu
   return (
     <div
       ref={stack}
-      className={`stack${n > 1 ? ' is-multi' : ''}`}
+      className={`${styles.stack}${n > 1 ? ` ${styles.isMulti}` : ''}`}
       onPointerEnter={(event) => {
         if (event.pointerType === 'mouse') setHover(true);
       }}
@@ -284,13 +287,13 @@ function AlbumCard({
   const photo = photos[on];
   return (
     <div
-      className={`card card--${role}`}
+      className={`${styles.card} ${styles[role]}`}
       onClick={(event) => {
         if (onOpen && on >= 0) onOpen(on, event.currentTarget);
         else onSelect?.();
       }}
     >
-      <div className="card__pan">
+      <div className={styles.pan}>
         {photos.map((ref, i) => (
           <img
             key={i}
@@ -298,12 +301,12 @@ function AlbumCard({
             alt=""
             draggable={false}
             data-photo-key={i === on ? photoKey(ref) : undefined}
-            className={i === on ? 'is-on' : i === under ? 'is-under' : undefined}
+            className={i === on ? styles.isOn : i === under ? styles.isUnder : undefined}
           />
         ))}
       </div>
       <div
-        className="card__title"
+        className={styles.title}
         onClick={(event) => {
           if (role !== 'cur') return;
           event.stopPropagation();
@@ -315,11 +318,11 @@ function AlbumCard({
           {monthYear(album)} · {album.photoCount} photos
         </small>
       </div>
-      <div className="card__name">
+      <div className={styles.name}>
         {monthYear(album)} · {album.title}
       </div>
-      <div className="card__count">{position}</div>
-      <div className="card__credit">{photo ? creditLine(photo, album.city, credits) : ''}</div>
+      <div className={styles.count}>{position}</div>
+      <div className={styles.credit}>{photo ? creditLine(photo, album.city, credits) : ''}</div>
     </div>
   );
 }
@@ -331,14 +334,14 @@ function EndSlot({ world }: { world: World }) {
   const photo = city ? cityPhotos(city)[0] : undefined;
   const url = photo ? photoUrl(photo) : null;
   return (
-    <div className="stack">
-      <div className="card card--cur card--end">
+    <div className={styles.stack}>
+      <div className={`${styles.card} ${styles.cur} ${styles.end}`}>
         {url ? (
-          <div className="card__pan">
-            <img className="is-on" src={url} alt="" />
+          <div className={styles.pan}>
+            <img className={styles.isOn} src={url} alt="" />
           </div>
         ) : (
-          <div className="cozy" dangerouslySetInnerHTML={{ __html: cozyRoom }} />
+          <div className={styles.cozy} dangerouslySetInnerHTML={{ __html: cozyRoom }} />
         )}
       </div>
     </div>
@@ -359,72 +362,92 @@ function Caption({ world }: { world: World }) {
     const from = archive.albumById.get(endCard.fromAlbumId) ?? album;
     const tripId = endCard.tour?.kind === 'trip' ? endCard.tour.tripId : null;
     return (
-      <div className="caption" key={`end-${endCard.fromAlbumId}`}>
-        <div className="caption__when">{endCard.home ? 'Back home' : 'The end of the road'}</div>
-        <div className="caption__place">{city ? city.name : home.name}</div>
-        <div className="caption__route">
+      <div className={styles.caption} key={`end-${endCard.fromAlbumId}`}>
+        <div className={styles.when}>{endCard.home ? 'Back home' : 'The end of the road'}</div>
+        <div className={styles.place}>{city ? city.name : home.name}</div>
+        <div className={styles.route}>
           {city ? city.country.name : home.country} · from{' '}
-          <button type="button" className="link" onClick={() => goArchive({ kind: 'city', key: from.city.key })}>
+          <button
+            type="button"
+            className={styles.link}
+            onClick={() => goArchive({ kind: 'city', key: from.city.key })}
+          >
             {from.city.name}
           </button>{' '}
           ·{' '}
-          <button type="button" className="link" onClick={() => goArchive({ kind: 'album', id: from.id })}>
+          <button
+            type="button"
+            className={styles.link}
+            onClick={() => goArchive({ kind: 'album', id: from.id })}
+          >
             {from.title}
           </button>
         </div>
-        <div className="caption__trip">
+        <div className={styles.trip}>
           {endCard.tour && tripId && (
             <>
               Trip ·{' '}
-              <button type="button" className="link" onClick={() => goArchive({ kind: 'trip', id: tripId })}>
+              <button
+                type="button"
+                className={styles.link}
+                onClick={() => goArchive({ kind: 'trip', id: tripId })}
+              >
                 {endCard.tour.name}
               </button>
             </>
           )}
         </div>
-        <div className="caption__status">{status}</div>
+        <div className={styles.status}>{status}</div>
       </div>
     );
   }
 
   const trip = tripOfAlbum(archive, album.id);
   return (
-    <div className="caption" key={album.id}>
-      <div className="caption__when">
+    <div className={styles.caption} key={album.id}>
+      <div className={styles.when}>
         {monthYear(album)} · album {focus + 1} of {archive.albums.length}
       </div>
       <button
         type="button"
-        className="caption__place"
+        className={styles.place}
         onClick={() => goArchive({ kind: 'city', key: album.city.key })}
       >
         {album.city.name}
       </button>
-      <div className="caption__route">
+      <div className={styles.route}>
         <button
           type="button"
-          className="link link--strong"
+          className={`${styles.link} ${styles.strong}`}
           onClick={() => goArchive({ kind: 'country', id: album.city.country.id })}
         >
           {album.city.country.name}
         </button>{' '}
         ·{' '}
-        <button type="button" className="link" onClick={() => goArchive({ kind: 'album', id: album.id })}>
+        <button
+          type="button"
+          className={styles.link}
+          onClick={() => goArchive({ kind: 'album', id: album.id })}
+        >
           {album.title}
         </button>{' '}
         · {album.photoCount} photos
       </div>
-      <div className="caption__trip">
+      <div className={styles.trip}>
         {trip && (
           <>
             Trip ·{' '}
-            <button type="button" className="link" onClick={() => goArchive({ kind: 'trip', id: trip.id })}>
+            <button
+              type="button"
+              className={styles.link}
+              onClick={() => goArchive({ kind: 'trip', id: trip.id })}
+            >
               {trip.name}
             </button>
           </>
         )}
       </div>
-      <div className="caption__status">{status}</div>
+      <div className={styles.status}>{status}</div>
     </div>
   );
 }

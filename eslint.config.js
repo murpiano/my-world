@@ -4,7 +4,20 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', '.temp', '.superpowers', 'docs'] },
+  {
+    // supabase/functions is Deno, not part of the Vite app: different globals, different
+    // module resolution, and `deno lint` is what checks it
+    ignores: [
+      'dist',
+      'node_modules',
+      '.temp',
+      '.superpowers',
+      'docs',
+      'supabase/functions',
+      'playwright-report',
+      'test-results',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strict,
   reactHooks.configs.flat.recommended,
@@ -17,6 +30,23 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+    },
+  },
+  {
+    // the backend verification scripts run under Node, by hand, and report with console.log
+    files: ['supabase/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
+    // the end-to-end tests drive a browser from Node
+    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    languageOptions: {
+      globals: { ...globals.node },
     },
   },
 );

@@ -1,0 +1,27 @@
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+
+  canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+}
+
+.stars {
+  inset: auto;
+  top: -30px;
+  left: -30px;
+  will-change: transform;
+}
+
+.sky {
+  pointer-events: none;
+}
+
+.globeCanvas {
+  cursor: grab;
+  touch-action: none;
+}

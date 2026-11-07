@@ -7,15 +7,16 @@ import { repository } from '@/state/owner';
 import { saveAccount, userStore } from '@/state/user';
 import { BackupBox } from './BackupBox';
 import { ConfirmButton } from './ConfirmButton';
-import { accountProblem } from './fields';
+import { accountProblem, handleProblem } from './fields';
 import { PlaceField } from './PlaceField';
-import { Acts, Sheet } from './Sheet';
+import { Acts, Btn, Field, Note, Row, Sheet } from './Sheet';
 
 /** Name, email, a new password twice, the home base, and a way back to the demo. */
 export function AccountForm({ archive, onClose }: { archive: Archive; onClose: () => void }) {
   const user = userStore.get().user;
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
+  const [handle, setHandle] = useState(user?.handle ?? '');
   const [pass, setPass] = useState('');
   const [again, setAgain] = useState('');
   const [home, setHome] = useState<PickedPlace | null>(user?.home ?? null);
@@ -23,23 +24,26 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
   const [error, setError] = useState<string | null>(null);
   if (!user) return null;
 
-  const problem = accountProblem({
-    name,
-    email,
-    password: pass,
-    again,
-    home,
-    passwordOptional: true,
-  });
+  const problem =
+    accountProblem({
+      name,
+      email,
+      password: pass,
+      again,
+      home,
+      passwordOptional: true,
+    }) ?? handleProblem(handle);
   const submit = async () => {
     if (problem || !home || busy) return;
     const { name: city, country, countryId, lat, lon } = home;
+    const auth = backend()?.auth;
+    const wanted = handle.trim().toLowerCase();
     const fields = {
       name: name.trim(),
       email: email.trim(),
       home: { name: city, country, countryId, lat, lon },
+      ...(auth && wanted && wanted !== user.handle ? { handle: wanted } : {}),
     };
-    const auth = backend()?.auth;
     if (auth) {
       setBusy(true);
       setError(null);
@@ -64,17 +68,15 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
       lead="Your home base is where every trip starts and comes back to, unless a trip says otherwise."
       onClose={onClose}
     >
-      <label className="sheet__field" htmlFor="fName">
-        Name
+      <Field label="Name" htmlFor="fName">
         <input
           id="fName"
           autoComplete="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-      </label>
-      <label className="sheet__field" htmlFor="fMail">
-        Email
+      </Field>
+      <Field label="Email" htmlFor="fMail">
         <input
           id="fMail"
           type="email"
@@ -82,10 +84,20 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-      </label>
-      <div className="sheet__row">
-        <label className="sheet__field" htmlFor="fPass">
-          New password
+      </Field>
+      {backend() && (
+        <Field label="Public handle" htmlFor="fHandle">
+          <input
+            id="fHandle"
+            value={handle}
+            placeholder="your-name"
+            onChange={(event) => setHandle(event.target.value.toLowerCase())}
+          />
+          <small>Your shared trips live at /u/{handle.trim() || 'your-name'}</small>
+        </Field>
+      )}
+      <Row>
+        <Field label="New password" htmlFor="fPass">
           <input
             id="fPass"
             type="password"
@@ -93,9 +105,8 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
             value={pass}
             onChange={(event) => setPass(event.target.value)}
           />
-        </label>
-        <label className="sheet__field" htmlFor="fPass2">
-          Repeat it
+        </Field>
+        <Field label="Repeat it" htmlFor="fPass2">
           <input
             id="fPass2"
             type="password"
@@ -103,8 +114,8 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
             value={again}
             onChange={(event) => setAgain(event.target.value)}
           />
-        </label>
-      </div>
+        </Field>
+      </Row>
       <PlaceField id="fHome" label="Home base" archive={archive} value={home} onPick={setHome} />
       <BackupBox archive={archive} />
       <Acts>
@@ -117,25 +128,18 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
               .then(() => location.reload());
           }}
         />
-        <button type="button" className="sheet__btn" onClick={onClose}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="sheet__btn is-main"
-          disabled={problem !== null || busy}
-          onClick={() => void submit()}
-        >
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn variant="main" disabled={problem !== null || busy} onClick={() => void submit()}>
           Save
-        </button>
+        </Btn>
       </Acts>
-      <p className="sheet__note">
+      <Note>
         {error ??
           problem ??
           (backend()
             ? 'Changing the email sends a link to confirm it.'
             : 'The password is not stored anywhere yet.')}
-      </p>
+      </Note>
     </Sheet>
   );
 }

@@ -10,7 +10,8 @@ import { ConfirmButton } from './ConfirmButton';
 import { DropZone } from './DropZone';
 import { dateInput, parseDate } from './fields';
 import { PlaceField } from './PlaceField';
-import { Acts, Sheet } from './Sheet';
+import { PrivacyField } from './PrivacyField';
+import { Acts, Btn, Field, Note, Row, Sheet } from './Sheet';
 
 const today = (): string => {
   const now = new Date();
@@ -132,38 +133,34 @@ export function AlbumForm({
       }
       onClose={onClose}
     >
-      <label className="sheet__field" htmlFor="fName">
-        Title
+      <Field label="Title" htmlFor="fName">
         <input
           id="fName"
           placeholder="Rooftops at sunset"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-      </label>
+      </Field>
       <PlaceField id="fPlace" label="Place" archive={archive} value={place} onPick={setPlace} />
-      <div className="sheet__row">
-        <label className="sheet__field" htmlFor="fDate">
-          Date
+      <Row>
+        <Field label="Date" htmlFor="fDate">
           <input
             id="fDate"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
           />
-        </label>
-        <label className="sheet__field" htmlFor="fTime">
-          Time
+        </Field>
+        <Field label="Time" htmlFor="fTime">
           <input
             id="fTime"
             type="time"
             value={time}
             onChange={(event) => setTime(event.target.value)}
           />
-        </label>
-      </div>
-      <label className="sheet__field" htmlFor="fTrip">
-        Trip
+        </Field>
+      </Row>
+      <Field label="Trip" htmlFor="fTrip">
         <select id="fTrip" value={trip} onChange={(event) => setTrip(event.target.value)}>
           <option value="">Not part of a trip</option>
           {archive.trips.map((one) => (
@@ -172,14 +169,17 @@ export function AlbumForm({
             </option>
           ))}
         </select>
-      </label>
+      </Field>
+      {album && world.accountId && (
+        <PrivacyField kind="album" itemId={album.id} accountId={world.accountId} />
+      )}
       {!album && (
         <>
           <DropZone onFiles={(added) => setFiles([...files, ...added])} />
           {files.length > 0 && (
-            <p className="sheet__note">
+            <Note>
               {files.length} photo{files.length === 1 ? '' : 's'} ready.
-            </p>
+            </Note>
           )}
         </>
       )}
@@ -197,19 +197,12 @@ export function AlbumForm({
             }}
           />
         )}
-        <button type="button" className="sheet__btn" onClick={onClose}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="sheet__btn is-main"
-          disabled={!ready}
-          onClick={() => void submit()}
-        >
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn variant="main" disabled={!ready} onClick={() => void submit()}>
           {busy ? 'Saving…' : album ? 'Save' : 'Create album'}
-        </button>
+        </Btn>
       </Acts>
-      {trouble && <p className="sheet__note">{trouble}</p>}
+      {trouble && <Note>{trouble}</Note>}
     </Sheet>
   );
 }

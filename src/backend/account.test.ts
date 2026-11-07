@@ -8,6 +8,9 @@ describe('friendlyError', () => {
     expect(friendlyError('User already registered')).toMatch(/already has an account/);
     expect(friendlyError('email rate limit exceeded')).toMatch(/Too many/);
     expect(friendlyError('TypeError: Failed to fetch')).toMatch(/cannot be reached/);
+    expect(friendlyError('duplicate key value violates unique constraint "profiles_handle_key"')).toMatch(
+      /handle is taken/,
+    );
     expect(friendlyError('Something odd')).toBe('Something odd');
   });
 });

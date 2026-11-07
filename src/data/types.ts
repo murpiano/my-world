@@ -86,6 +86,8 @@ export interface User {
   name: string;
   email: string;
   home: Place;
+  /** The public handle, with a backend; absent when everything stays in this browser. */
+  handle?: string;
 }
 
 /** One line of public/demo/photos.json. */

@@ -6,7 +6,7 @@ import { ownerStore } from '@/state/owner';
 import { useStore } from '@/state/store';
 import type { Director } from '@/tour/director';
 import { PlaceLabel } from './PlaceLabel';
-import './globe.scss';
+import styles from './GlobeStage.module.css';
 
 /** The three canvases (stars, sky events, globe) and the hover label, driven by the engine. */
 export function GlobeStage({ world, director }: { world: World; director: Director }) {
@@ -42,12 +42,12 @@ export function GlobeStage({ world, director }: { world: World; director: Direct
   }, [world, director]);
 
   return (
-    <div className="globe-stage">
-      <canvas ref={stars} className="globe-stage__stars" aria-hidden="true" />
-      <canvas ref={sky} className="globe-stage__sky" aria-hidden="true" />
+    <div className={styles.stage}>
+      <canvas ref={stars} className={styles.stars} aria-hidden="true" />
+      <canvas ref={sky} className={styles.sky} aria-hidden="true" />
       <canvas
         ref={globe}
-        className="globe-stage__globe"
+        className={styles.globeCanvas}
         role="img"
         aria-label="A night globe of the places visited. Drag to turn it, scroll to zoom."
       />

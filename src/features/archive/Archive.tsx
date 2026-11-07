@@ -20,7 +20,7 @@ import { socialFor, socialStore } from '@/state/social';
 import { useStore } from '@/state/store';
 import type { Director } from '@/tour/director';
 import { showOnMap } from './links';
-import './archive.scss';
+import styles from './Archive.module.css';
 
 const go = (page: ArchivePage) => openArchive(appStore, page, false);
 
@@ -50,25 +50,26 @@ export function Archive({ world, director }: { world: World; director: Director 
   const header = headerOf(data);
   return (
     <section
-      className={`archive${shown ? ' is-on' : ''}${view.slow ? ' is-slow' : ''}`}
+      className={`${styles.archive}${shown ? ` ${styles.isOn}` : ''}${view.slow ? ` ${styles.isSlow}` : ''}`}
+      data-archive-root
       aria-label="Archive"
     >
-      <div className="archive__head">
-        <div className="archive__bar">
-          <button type="button" className="archive__round" aria-label="Close" onClick={() => closeArchive(appStore)}>
+      <div className={styles.head}>
+        <div className={styles.bar}>
+          <button type="button" className={styles.round} aria-label="Close" onClick={() => closeArchive(appStore)}>
             ✕
           </button>
           {view.stack.length > 1 && (
-            <button type="button" className="archive__round" aria-label="Back" onClick={() => backArchive(appStore)}>
+            <button type="button" className={styles.round} aria-label="Back" onClick={() => backArchive(appStore)}>
               ←
             </button>
           )}
-          <nav className="archive__tabs">
+          <nav className={styles.tabs}>
             {SECTIONS.map((section) => (
               <button
                 key={section.key}
                 type="button"
-                className={sectionOf(view.stack[0] ?? page) === section.key ? 'is-on' : undefined}
+                className={sectionOf(view.stack[0] ?? page) === section.key ? styles.isOn : undefined}
                 onClick={() => openArchive(appStore, { kind: section.key }, true)}
               >
                 {section.label}
@@ -76,9 +77,9 @@ export function Archive({ world, director }: { world: World; director: Director 
             ))}
           </nav>
         </div>
-        <div className="archive__text" key={JSON.stringify(page)}>
+        <div className={styles.text} key={JSON.stringify(page)}>
           {header.crumbs.length > 0 && (
-            <div className="archive__crumbs">
+            <div className={styles.crumbs}>
               {header.crumbs.map(([label, to], i) => (
                 <span key={label}>
                   {i > 0 && <i>›</i>}
@@ -90,11 +91,15 @@ export function Archive({ world, director }: { world: World; director: Director 
             </div>
           )}
           <h2>{header.title}</h2>
-          {header.sub && <p className="archive__sub">{header.sub}</p>}
+          {header.sub && <p className={styles.sub}>{header.sub}</p>}
           {(header.map || owner) && (
-            <div className="archive__acts">
+            <div className={styles.acts}>
               {header.map && (
-                <button type="button" className="archive__btn is-star" onClick={() => header.map && showOnMap(director, header.map)}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.isStar}`}
+                  onClick={() => header.map && showOnMap(director, header.map)}
+                >
                   ◎ Show on map
                 </button>
               )}
@@ -103,7 +108,7 @@ export function Archive({ world, director }: { world: World; director: Director 
                   <button
                     key={edit.label}
                     type="button"
-                    className="archive__btn"
+                    className={styles.btn}
                     onClick={() => openForm(appStore, edit.form)}
                   >
                     {edit.label}
@@ -113,7 +118,10 @@ export function Archive({ world, director }: { world: World; director: Director 
           )}
         </div>
       </div>
-      <div className={`archive__grid${data.kind === 'album' ? ' archive__grid--photos' : ''}`} key={`grid-${JSON.stringify(page)}`}>
+      <div
+        className={`${styles.grid}${data.kind === 'album' ? ` ${styles.photosGrid}` : ''}`}
+        key={`grid-${JSON.stringify(page)}`}
+      >
         <PageBody data={data} world={world} owner={owner} />
       </div>
     </section>
@@ -237,7 +245,7 @@ function PageBody({ data, world, owner }: { data: PageData; world: World; owner:
         <>
           {data.route.map((stop) => (
             <Fragment key={`stop-${stop.n}`}>
-              <div className="archive__stop">
+              <div className={styles.stop}>
                 <i>{String(stop.n).padStart(2, '0')}</i>
                 <b>{stop.label}</b>
                 <span>{stop.place}</span>
@@ -279,7 +287,7 @@ function YearGroups({ albums, showCity }: { albums: Album[]; showCity: boolean }
     <>
       {albumsByYear(albums).map((group) => (
         <Fragment key={group.year}>
-          <div className="archive__year">{group.year}</div>
+          <div className={styles.year}>{group.year}</div>
           {group.albums.map((album) => (
             <Folder key={album.id} album={album} showCity={showCity} />
           ))}
@@ -297,7 +305,7 @@ function Cover({ photo }: { photo: PhotoRef | undefined }) {
 function TripCard({ journey }: { journey: Journey }) {
   const places = [...new Set(journey.albums.map((a) => a.city.name))];
   return (
-    <button type="button" className="archive__card" onClick={() => go({ kind: 'trip', id: journey.id })}>
+    <button type="button" className={styles.card} onClick={() => go({ kind: 'trip', id: journey.id })}>
       <Cover photo={coverOf(journey.albums)} />
       <div>
         <b>{journey.name}</b>
@@ -314,7 +322,7 @@ function CountryCard({ country }: { country: Country }) {
   const cities = country.cities.filter((c) => c.albums.length > 0);
   const albums = cities.reduce((n, c) => n + c.albums.length, 0);
   return (
-    <button type="button" className="archive__card" onClick={() => go({ kind: 'country', id: country.id })}>
+    <button type="button" className={styles.card} onClick={() => go({ kind: 'country', id: country.id })}>
       <Cover photo={coverOf(cities.flatMap((c) => c.albums))} />
       <div>
         <b>{country.name}</b>
@@ -331,7 +339,7 @@ function CityCard({ city }: { city: City }) {
   const first = years[0];
   const last = years[years.length - 1];
   return (
-    <button type="button" className="archive__card" onClick={() => go({ kind: 'city', key: city.key })}>
+    <button type="button" className={styles.card} onClick={() => go({ kind: 'city', key: city.key })}>
       <Cover photo={cityPhotos(city)[0]} />
       <div>
         <b>{city.name}</b>
@@ -348,7 +356,11 @@ function YearCard({ year, world }: { year: number; world: World }) {
   const albums = world.archive.albums.filter((a) => a.year === year);
   const places = new Set(albums.map((a) => a.city)).size;
   return (
-    <button type="button" className="archive__card archive__card--year" onClick={() => go({ kind: 'year', year })}>
+    <button
+      type="button"
+      className={`${styles.card} ${styles.yearCard}`}
+      onClick={() => go({ kind: 'year', year })}
+    >
       <Cover photo={coverOf(albums)} />
       <div>
         <b>{year}</b>
@@ -364,12 +376,12 @@ function YearCard({ year, world }: { year: number; world: World }) {
 function Folder({ album, showCity }: { album: Album; showCity: boolean }) {
   const photos = [...folderPhotos(album)].reverse();
   return (
-    <button type="button" className="folder" onClick={() => go({ kind: 'album', id: album.id })}>
-      <div className="folder__stack">
+    <button type="button" className={styles.folder} onClick={() => go({ kind: 'album', id: album.id })}>
+      <div className={styles.stack}>
         {photos.map((photo, i) => (
           <img key={i} src={photoUrl(photo) ?? undefined} alt="" loading="lazy" />
         ))}
-        <div className="folder__front">
+        <div className={styles.front}>
           <b>{album.title}</b>
           <span>
             {showCity ? `${album.city.name} · ` : ''}
@@ -410,15 +422,15 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
     }
   };
   const zone = owner ? (
-    <div className="archive__add">
+    <div className={styles.add}>
       <DropZone onFiles={(files) => void add(files)} />
-      {trouble && <p className="archive__sub">{trouble}</p>}
+      {trouble && <p className={styles.sub}>{trouble}</p>}
     </div>
   ) : null;
   if (album.photos.length === 0) {
     return (
       <>
-        <p className="archive__sub">No photos yet.</p>
+        <p className={styles.sub}>No photos yet.</p>
         {zone}
       </>
     );
@@ -429,30 +441,30 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
         const key = photoKey(photo);
         const social = socialFor(key);
         const open = (element: HTMLElement) => {
-          const frame = element.querySelector('.archive__photo');
+          const frame = element.querySelector('[data-photo-frame]');
           if (!frame) return;
           const { x, y, width, height } = frame.getBoundingClientRect();
           openPhoto(appStore, album.id, index, { x, y, width, height });
         };
         return (
           // the tile opens the photo; the owner's pencil is a button of its own beside it
-          <div key={key} className="archive__pic">
-            <button type="button" className="archive__open" onClick={(event) => open(event.currentTarget)}>
-              <div className="archive__photo">
+          <div key={key} className={styles.pic}>
+            <button type="button" className={styles.open} onClick={(event) => open(event.currentTarget)}>
+              <div className={styles.photo} data-photo-frame>
                 <img src={photoUrl(photo) ?? undefined} alt="" loading="lazy" data-photo-key={key} />
-                <div className="archive__meta">
+                <div className={styles.meta}>
                   <span>
                     {social.liked ? '♥' : '♡'} {social.likes}
                   </span>
                   <span>{plural(social.comments.length, 'comment')}</span>
                 </div>
               </div>
-              <p className="archive__cap">{photoNote(photo)}</p>
+              <p className={styles.cap}>{photoNote(photo)}</p>
             </button>
             {owner && (
               <button
                 type="button"
-                className="archive__pencil"
+                className={styles.pencil}
                 aria-label="Edit photo"
                 onClick={() => openForm(appStore, { kind: 'photo', albumId: album.id, photoKey: key })}
               >

@@ -1,0 +1,489 @@
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr minmax(260px, 340px);
+  grid-template-areas: 'info stage social';
+  gap: var(--space-32);
+  padding: var(--space-32);
+
+  /* the backdrop fades; the photo itself never does, so it can grow and fly back whole */
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgb(4 6 13 / 96%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  &.isOn::before {
+    opacity: 1;
+  }
+}
+
+.close,
+.nav,
+.bar {
+  opacity: 0;
+  transition: opacity 0.4s ease 0.2s;
+}
+
+.lightbox.isOn .close,
+.lightbox.isOn .bar {
+  opacity: 1;
+}
+
+.lightbox.isOn .nav {
+  opacity: 0.8;
+}
+
+.close {
+  position: absolute;
+  top: var(--space-32);
+  left: var(--space-32);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgb(127 137 163 / 35%);
+  border-radius: 50%;
+  background: rgb(12 16 30 / 70%);
+  font-size: 16px;
+
+  &:hover {
+    border-color: rgb(255 200 107 / 60%);
+  }
+}
+
+/* the text columns sit in the grid on a wide screen, and scroll under the photo on a phone */
+.scroll {
+  display: contents;
+}
+
+.info {
+  grid-area: info;
+}
+
+.social {
+  grid-area: social;
+}
+
+.info,
+.social {
+  min-height: 0;
+  padding-top: 70px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.5s ease 0.25s,
+    transform 0.6s var(--ease) 0.25s;
+}
+
+.lightbox.isOn .info,
+.lightbox.isOn .social {
+  opacity: 1;
+  transform: none;
+}
+
+.link {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  text-align: left;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+
+  &:hover {
+    border-color: rgb(255 200 107 / 50%);
+    color: var(--accent);
+  }
+}
+
+.country {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.city {
+  margin-top: var(--space-8);
+  font-family: var(--font-family-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 46px;
+  line-height: 1;
+}
+
+.album {
+  margin-top: var(--space-16);
+  font-family: var(--font-family-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.date {
+  margin-top: var(--space-8);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.note {
+  margin: var(--space-16) 0 0;
+  font-family: var(--font-family-display);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.desc {
+  margin: var(--space-12) 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #c3c9d8;
+}
+
+.credit {
+  margin: var(--space-16) 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.stage {
+  grid-area: stage;
+  position: relative;
+  /* horizontal swipes turn the photos; the browser must not pan instead */
+  touch-action: none;
+  min-height: 0;
+  margin-bottom: var(--space-48);
+  cursor: pointer;
+}
+
+/* the row of slides: every slide the same size, so the frame never changes between photos */
+.row {
+  --frame: 100%; /* a slide is this wide, of the stage */
+  --slot: 40%; /* and a step of the row moves this far, of a slide */
+
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--frame);
+  margin-left: calc(var(--frame) / -2);
+  overflow: hidden;
+  border-radius: 10px;
+  background: #0b1020;
+  transform-origin: 0 0;
+  transform: translateX(calc(var(--offset) * var(--slot) + var(--pull, 0px)));
+  transition:
+    transform 0.7s var(--ease),
+    opacity 0.7s ease;
+  will-change: transform;
+
+  /* the neighbours wait out of sight, and come in as the row moves */
+  &.isNear,
+  &.isFar {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.row.isPulled .slide {
+  transition: none;
+}
+
+/* the photo whole, and its own blurred and darkened self to fill the frame round it */
+.backdrop {
+  position: absolute;
+  inset: -30px;
+  background-position: center;
+  background-size: cover;
+  filter: blur(26px) brightness(0.55) saturate(1.2);
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* while the window closes the photo flies back alone */
+.lightbox:not(.isOn) .slide:not(.isCurrent) {
+  opacity: 0;
+}
+
+.nav {
+  position: absolute;
+  top: 50%;
+  z-index: 31;
+  width: 48px;
+  height: 48px;
+  margin-top: -24px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: rgb(4 6 13 / 50%);
+  backdrop-filter: blur(6px);
+  font-size: 18px;
+  color: #fff;
+  transition:
+    opacity 0.3s,
+    background 0.3s;
+
+  &:hover {
+    background: rgb(4 6 13 / 75%);
+  }
+
+  &.prev {
+    left: 14px;
+  }
+
+  &.next {
+    right: 14px;
+  }
+}
+
+.bar {
+  position: absolute;
+  bottom: -46px;
+  left: 50%;
+  z-index: 31;
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--muted);
+  transform: translateX(-50%);
+  cursor: default;
+
+  button {
+    padding: var(--space-4) var(--space-12);
+    border: 1px solid rgb(127 137 163 / 35%);
+    border-radius: 99px;
+    background: rgb(12 16 30 / 70%);
+    font-size: 12px;
+    color: var(--text);
+
+    &.isOn {
+      border-color: rgb(255 200 107 / 60%);
+      color: var(--accent);
+    }
+  }
+
+  label {
+    display: flex;
+    gap: var(--space-8);
+    align-items: center;
+  }
+
+  input {
+    width: 110px;
+    accent-color: var(--accent);
+  }
+}
+
+.social {
+  display: flex;
+  flex-direction: column;
+
+  h4 {
+    margin: var(--space-24) 0 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+.like {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  border: 1px solid rgb(255 200 107 / 45%);
+  border-radius: 99px;
+  background: rgb(255 200 107 / 6%);
+  font-size: 14px;
+  color: var(--text);
+  transition:
+    background 0.3s,
+    transform 0.3s var(--ease);
+
+  i {
+    display: inline-block;
+    font-style: normal;
+    color: var(--muted);
+    transition:
+      color 0.3s,
+      transform 0.4s var(--ease);
+  }
+
+  &.isOn {
+    background: rgb(255 200 107 / 16%);
+
+    i {
+      color: #ff8a7a;
+      transform: scale(1.25);
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.comments {
+  flex: 1;
+  min-height: 0;
+  margin-top: var(--space-12);
+  padding-right: var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.comment {
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid rgb(127 137 163 / 15%);
+  font-size: 13px;
+  line-height: 1.5;
+
+  b {
+    font-weight: 500;
+  }
+
+  small {
+    margin-left: var(--space-8);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  p {
+    margin: var(--space-4) 0 0;
+    color: #c3c9d8;
+  }
+}
+
+.form {
+  display: flex;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+
+  textarea {
+    flex: 1;
+    height: 44px;
+    padding: var(--space-12);
+    border: 1px solid rgb(127 137 163 / 35%);
+    border-radius: 12px;
+    background: rgb(12 16 30 / 80%);
+    font-size: 13px;
+    color: var(--text);
+    resize: none;
+    user-select: text;
+    -webkit-user-select: text;
+
+    &:focus {
+      outline: none;
+      border-color: rgb(255 200 107 / 60%);
+    }
+  }
+
+  button {
+    padding: 0 var(--space-16);
+    border: 0;
+    border-radius: 12px;
+    background: var(--accent);
+    font-weight: 500;
+    color: #1a1406;
+  }
+}
+
+.demo {
+  margin-top: var(--space-8);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+@media (width <= 767px) {
+  .lightbox {
+    grid-template-rows: 44vh 1fr;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'stage'
+      'rest';
+    gap: var(--space-12);
+    padding: var(--space-64) var(--space-12) var(--space-12);
+  }
+
+  .stage {
+    margin-bottom: var(--space-40);
+  }
+
+  .scroll {
+    display: block;
+    grid-area: rest;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .info,
+  .social {
+    padding-top: 0;
+  }
+
+  .social {
+    margin-top: var(--space-24);
+  }
+
+  .comments {
+    overflow: visible;
+  }
+
+  .close {
+    top: var(--space-12);
+    left: var(--space-12);
+  }
+
+  .city {
+    font-size: 34px;
+  }
+
+  .bar {
+    bottom: -40px;
+  }
+
+  /* a phone turns the photos with a finger: the neighbours peek in from either side */
+  .nav {
+    display: none;
+  }
+
+  .row {
+    --frame: 84%;
+    --slot: 106%;
+  }
+
+  .slide.isNear {
+    opacity: 0.5;
+  }
+}

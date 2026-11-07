@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Btn } from './Sheet';
 
 const BACK_MS = 3000;
 
@@ -21,12 +22,8 @@ export function ConfirmButton({
   }, [sure]);
 
   return (
-    <button
-      type="button"
-      className={`sheet__btn is-danger${sure ? ' is-sure' : ''}`}
-      onClick={() => (sure ? onConfirm() : setSure(true))}
-    >
+    <Btn variant="danger" armed={sure} onClick={() => (sure ? onConfirm() : setSure(true))}>
       {sure ? ask : label}
-    </button>
+    </Btn>
   );
 }

@@ -4,7 +4,7 @@ import type { PickedPlace } from '@/data/places';
 import { logIn } from '@/state/user';
 import { accountProblem } from './fields';
 import { PlaceField } from './PlaceField';
-import { Acts, Sheet } from './Sheet';
+import { Acts, Btn, Field, Note, Sheet } from './Sheet';
 
 /** Logging in swaps the demo for the owner's archive, so the page opens again with it. */
 export function LoginForm({
@@ -39,17 +39,15 @@ export function LoginForm({
       lead={`${why ? `${why} ` : ''}Your home base is where every trip starts and where it comes back to.`}
       onClose={onClose}
     >
-      <label className="sheet__field" htmlFor="fName">
-        Name
+      <Field label="Name" htmlFor="fName">
         <input
           id="fName"
           autoComplete="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-      </label>
-      <label className="sheet__field" htmlFor="fMail">
-        Email
+      </Field>
+      <Field label="Email" htmlFor="fMail">
         <input
           id="fMail"
           type="email"
@@ -57,9 +55,8 @@ export function LoginForm({
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-      </label>
-      <label className="sheet__field" htmlFor="fPass">
-        Password
+      </Field>
+      <Field label="Password" htmlFor="fPass">
         <input
           id="fPass"
           type="password"
@@ -67,26 +64,19 @@ export function LoginForm({
           value={pass}
           onChange={(event) => setPass(event.target.value)}
         />
-      </label>
+      </Field>
       <PlaceField id="fHome" label="Home base" archive={archive} value={home} onPick={setHome} />
       <Acts>
-        <button type="button" className="sheet__btn" onClick={onClose}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="sheet__btn is-main"
-          disabled={problem !== null}
-          onClick={submit}
-        >
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn variant="main" disabled={problem !== null} onClick={submit}>
           Log in
-        </button>
+        </Btn>
       </Acts>
-      {problem && (name || email || pass) && <p className="sheet__note is-problem">{problem}</p>}
-      <p className="sheet__note">
+      {problem && (name || email || pass) && <Note problem>{problem}</Note>}
+      <Note>
         There is no server yet. Your archive stays in this browser; it starts as a copy of the demo,
         so there is something to play with.
-      </p>
+      </Note>
     </Sheet>
   );
 }

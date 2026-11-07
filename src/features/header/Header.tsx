@@ -14,7 +14,7 @@ import { signOutAccount } from '@/backend/account';
 import { userStore } from '@/state/user';
 import { albumTime } from '@/timeline/range';
 import { HouseIcon } from './HouseIcon';
-import './header.scss';
+import styles from './Header.module.css';
 
 /** The burger and the brand on the left; the stats and the gear on the right. */
 export function Header({ world }: { world: World | null }) {
@@ -34,11 +34,12 @@ export function Header({ world }: { world: World | null }) {
   }, [menu]);
 
   return (
-    <header ref={root} className="header">
-      <div className="header__lead">
+    <header ref={root} className={styles.header}>
+      <div className={styles.lead}>
         <button
           type="button"
-          className={`header__round header__burger${menu === 'nav' ? ' is-on' : ''}`}
+          className={`${styles.roundButton} ${styles.burger}${menu === 'nav' ? ` ${styles.isOn}` : ''}`}
+          data-splash-burger
           aria-label="Menu"
           aria-expanded={menu === 'nav'}
           onClick={() => toggleMenu(appStore, 'nav')}
@@ -47,18 +48,18 @@ export function Header({ world }: { world: World | null }) {
           <span />
           <span />
         </button>
-        <div className="header__brand">
+        <div className={styles.brand} data-splash-brand>
           My World<small>Memories of the places I&apos;ve been.</small>
         </div>
       </div>
 
       {world && (
-        <div className="header__side">
-          <div className="header__row">
+        <div className={styles.side}>
+          <div className={styles.row}>
             <Stats world={world} />
             <button
               type="button"
-              className={`header__round header__gear${menu === 'settings' ? ' is-on' : ''}`}
+              className={`${styles.roundButton} ${styles.gear}${menu === 'settings' ? ` ${styles.isOn}` : ''}`}
               aria-label="Settings"
               aria-expanded={menu === 'settings'}
               onClick={() => toggleMenu(appStore, 'settings')}
@@ -66,7 +67,7 @@ export function Header({ world }: { world: World | null }) {
               ⚙
             </button>
           </div>
-          <p className={`header__help${help ? '' : ' is-off'}`}>
+          <p className={`${styles.help}${help ? '' : ` ${styles.isOff}`}`}>
             <b>Drag</b> and let go to spin · <b>scroll</b> to zoom · <b>click</b> a light
             <br />
             <b>Timeline:</b> drag for a range · click for all up to a point
@@ -76,7 +77,7 @@ export function Header({ world }: { world: World | null }) {
       )}
 
       <nav
-        className={`header__menu header__nav${menu === 'nav' ? ' is-on' : ''}`}
+        className={`${styles.menu} ${styles.nav}${menu === 'nav' ? ` ${styles.isOn}` : ''}`}
         inert={menu !== 'nav'}
       >
         <NavMenu world={world} />
@@ -97,7 +98,7 @@ function NavMenu({ world }: { world: World | null }) {
       <>
         <button
           type="button"
-          className="header__item is-primary"
+          className={`${styles.item} ${styles.isPrimary}`}
           onClick={() => openForm(appStore, { kind: 'login', why: null })}
         >
           Log in
@@ -115,20 +116,20 @@ function NavMenu({ world }: { world: World | null }) {
 
   return (
     <>
-      <div className="header__who">
+      <div className={styles.who}>
         <b>{user.name}</b>
         <span>
           <HouseIcon />
           <em>{`${user.home.name}, ${user.home.country}`}</em>
         </span>
       </div>
-      <button type="button" className="header__item" onClick={() => goArchive({ kind: 'trips' })}>
+      <button type="button" className={styles.item} onClick={() => goArchive({ kind: 'trips' })}>
         <span>Archive</span>
         <small>{plural(world?.archive.trips.length ?? 0, 'trip')}</small>
       </button>
       <button
         type="button"
-        className="header__item"
+        className={styles.item}
         onClick={() => openForm(appStore, { kind: 'account' })}
       >
         <span>Account settings</span>
@@ -136,7 +137,7 @@ function NavMenu({ world }: { world: World | null }) {
       </button>
       <hr />
       <AboutItem />
-      <button type="button" className="header__item" onClick={() => void signOutAccount()}>
+      <button type="button" className={styles.item} onClick={() => void signOutAccount()}>
         <span>Log out</span>
       </button>
     </>
@@ -147,7 +148,7 @@ function AboutItem() {
   return (
     <button
       type="button"
-      className="header__item"
+      className={styles.item}
       onClick={() => openForm(appStore, { kind: 'about' })}
     >
       <span>About</span>
@@ -165,7 +166,7 @@ function Stats({ world }: { world: World }) {
   const stats = journeyStats(world.archive, times, range, focus);
   const note = stats.scope === 'range' ? ' in range' : stats.scope === 'so far' ? ' so far' : '';
   return (
-    <div className="header__stats">
+    <div className={styles.stats}>
       <b>{stats.countries}</b> of {stats.totalCountries} countries{note}
       <br />
       <b>{stats.photos.toLocaleString('en')}</b> photos · <b>{stats.km.toLocaleString('en')}</b> km
@@ -183,7 +184,10 @@ function SettingsMenu({ open }: { open: boolean }) {
   const settings = useStore(settingsStore, (s) => s);
   const change = (patch: Partial<Settings>) => settingsStore.set(patch);
   return (
-    <div className={`header__menu header__settings${open ? ' is-on' : ''}`} inert={!open}>
+    <div
+      className={`${styles.menu} ${styles.settings}${open ? ` ${styles.isOn}` : ''}`}
+      inert={!open}
+    >
       <h4>On the main screen</h4>
       {SLIDERS.map(({ key, label, step }) => (
         <label key={key}>
@@ -200,7 +204,7 @@ function SettingsMenu({ open }: { open: boolean }) {
           />
         </label>
       ))}
-      <label className="header__check">
+      <label className={styles.check}>
         <input
           type="checkbox"
           checked={settings.help}

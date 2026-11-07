@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import './splash.scss';
+import styles from './Splash.module.css';
 
 /** The intro takes at least this long: the last line has finished appearing by then. */
 const MIN_MS = 4000;
@@ -115,13 +115,13 @@ export function Splash({ ready, onRelease }: { ready: boolean; onRelease: () => 
 
   useEffect(() => {
     if (!leaving) return;
-    const brand = document.querySelector('.header__brand');
+    const brand = document.querySelector('[data-splash-brand]');
     const small = brand?.querySelector('small');
     const name = brand?.firstChild;
     if (title.current && name) fly(title.current, textBox(name), 'var(--text)');
     if (tagline.current && small)
       fly(tagline.current, small.getBoundingClientRect(), 'var(--muted)');
-    const burger = document.querySelector('.header__burger');
+    const burger = document.querySelector('[data-splash-burger]');
     if (credit.current && burger) sink(credit.current, burger.getBoundingClientRect());
     const arrive = setTimeout(
       () => delete document.documentElement.dataset.splash,
@@ -136,18 +136,22 @@ export function Splash({ ready, onRelease }: { ready: boolean; onRelease: () => 
 
   if (gone) return null;
   return (
-    <div className={`splash${leaving ? ' is-leaving' : ''}`} role="status" aria-label="Loading">
-      <div className="splash__veil" />
-      <h1 className="splash__title" ref={title}>
+    <div
+      className={`${styles.splash}${leaving ? ` ${styles.isLeaving}` : ''}`}
+      role="status"
+      aria-label="Loading"
+    >
+      <div className={styles.veil} />
+      <h1 className={styles.title} ref={title}>
         My World
       </h1>
-      <p className="splash__tagline" ref={tagline}>
+      <p className={styles.tagline} ref={tagline}>
         Memories of the places I&apos;ve been.
       </p>
-      <div className="splash__bar">
-        <div className="splash__fill" ref={fill} />
+      <div className={styles.bar}>
+        <div className={styles.fill} ref={fill} />
       </div>
-      <p className="splash__credit" ref={credit}>
+      <p className={styles.credit} ref={credit}>
         Design and development by{' '}
         <a href="https://github.com/murpiano" target="_blank" rel="noopener noreferrer">
           murpiano

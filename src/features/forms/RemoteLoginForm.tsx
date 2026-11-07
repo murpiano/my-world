@@ -5,7 +5,7 @@ import { friendlyError } from '@/backend/account';
 import { backend } from '@/backend/session';
 import { accountProblem, signInProblem } from './fields';
 import { PlaceField } from './PlaceField';
-import { Acts, Sheet } from './Sheet';
+import { Acts, Btn, Field, Lead, Note, Sheet } from './Sheet';
 
 /** Logging in or making an account with the backend; the page opens again with the archive. */
 export function RemoteLoginForm({
@@ -63,20 +63,17 @@ export function RemoteLoginForm({
   if (sent) {
     return (
       <Sheet title="Check your email" onClose={onClose}>
-        <p className="sheet__lead">
-          We sent a link to {email.trim()}. Open it, then come back and log in.
-        </p>
+        <Lead>We sent a link to {email.trim()}. Open it, then come back and log in.</Lead>
         <Acts>
-          <button
-            type="button"
-            className="sheet__btn is-main"
+          <Btn
+            variant="main"
             onClick={() => {
               setSent(false);
               setMaking(false);
             }}
           >
             Log in
-          </button>
+          </Btn>
         </Acts>
       </Sheet>
     );
@@ -93,18 +90,16 @@ export function RemoteLoginForm({
       onClose={onClose}
     >
       {making && (
-        <label className="sheet__field" htmlFor="fName">
-          Name
+        <Field label="Name" htmlFor="fName">
           <input
             id="fName"
             autoComplete="name"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-        </label>
+        </Field>
       )}
-      <label className="sheet__field" htmlFor="fMail">
-        Email
+      <Field label="Email" htmlFor="fMail">
         <input
           id="fMail"
           type="email"
@@ -112,9 +107,8 @@ export function RemoteLoginForm({
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-      </label>
-      <label className="sheet__field" htmlFor="fPass">
-        Password
+      </Field>
+      <Field label="Password" htmlFor="fPass">
         <input
           id="fPass"
           type="password"
@@ -125,32 +119,25 @@ export function RemoteLoginForm({
             if (event.key === 'Enter' && !making) void submit();
           }}
         />
-      </label>
+      </Field>
       {making && (
         <PlaceField id="fHome" label="Home base" archive={archive} value={home} onPick={setHome} />
       )}
       <Acts>
-        <button
-          type="button"
-          className="sheet__btn"
+        <Btn
           onClick={() => {
             setMaking(!making);
             setError(null);
           }}
         >
           {making ? 'I have an account' : 'Make an account'}
-        </button>
-        <button
-          type="button"
-          className="sheet__btn is-main"
-          disabled={problem !== null || busy}
-          onClick={() => void submit()}
-        >
+        </Btn>
+        <Btn variant="main" disabled={problem !== null || busy} onClick={() => void submit()}>
           {busy ? 'One moment…' : making ? 'Make it' : 'Log in'}
-        </button>
+        </Btn>
       </Acts>
       {(error ?? (problem && (email || pass || name) ? problem : null)) && (
-        <p className="sheet__note is-problem">{error ?? problem}</p>
+        <Note problem>{error ?? problem}</Note>
       )}
     </Sheet>
   );

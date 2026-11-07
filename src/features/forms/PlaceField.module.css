@@ -1,0 +1,67 @@
+.chev {
+  position: absolute;
+  right: 14px;
+  bottom: 17px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.dropWrap {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  left: 0;
+  margin-top: var(--space-4);
+}
+
+.list {
+  position: relative;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 10px;
+  background: #141a30;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 55%);
+  color-scheme: dark;
+  overscroll-behavior: contain;
+
+  > div {
+    position: relative;
+  }
+
+  button {
+    position: absolute;
+    right: 0;
+    left: 0;
+    display: flex;
+    gap: var(--space-8);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-12);
+    border: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    letter-spacing: normal;
+    text-align: left;
+    text-transform: none;
+    white-space: nowrap;
+    cursor: pointer;
+
+    small {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    &.isActive {
+      background: rgb(255 255 255 / 8%);
+    }
+  }
+}

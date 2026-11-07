@@ -1,4 +1,4 @@
-import './normalize.scss';
-import './fonts.scss';
-import './variables.scss';
-import './globals.scss';
+import './normalize.css';
+import './fonts.css';
+import './tokens.css';
+import './globals.css';

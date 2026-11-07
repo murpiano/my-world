@@ -1,0 +1,305 @@
+.timeline {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 6;
+  padding: 0 var(--space-24) max(var(--space-16), var(--safe-bottom));
+  background: linear-gradient(transparent, rgb(4 6 13 / 85%) 40%);
+}
+
+.chips {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  height: 30px;
+  padding-left: 60px;
+}
+
+.chip {
+  display: inline-flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid rgb(143 184 255 / 50%);
+  border-radius: 99px;
+  background: rgb(12 16 30 / 80%);
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.35s,
+    transform 0.35s var(--ease);
+  pointer-events: none;
+
+  &.isOn {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  b {
+    font-weight: 500;
+    color: var(--accent-2);
+  }
+
+  i {
+    font-style: normal;
+    color: var(--muted);
+  }
+}
+
+.row {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.play {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgb(255 200 107 / 50%);
+  border-radius: 50%;
+  background: rgb(255 200 107 / 10%);
+  font-size: 15px;
+  color: var(--accent);
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.scroll {
+  flex: 1;
+  min-width: 0;
+}
+
+.track {
+  position: relative;
+  height: 62px;
+  cursor: crosshair;
+  touch-action: none;
+
+  &:hover .tip {
+    opacity: 1;
+  }
+}
+
+.base {
+  position: absolute;
+  inset: 29px 0 auto;
+  height: 1px;
+  background: rgb(127 137 163 / 40%);
+}
+
+.done {
+  position: absolute;
+  top: 29px;
+  height: 1px;
+  background: var(--accent);
+  transition:
+    width 1.2s cubic-bezier(0.3, 0.7, 0.2, 1),
+    left 1.2s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.sep {
+  position: absolute;
+  top: 25px;
+  width: 1px;
+  height: 9px;
+  background: rgb(127 137 163 / 35%);
+}
+
+.band {
+  position: absolute;
+  top: 16px;
+  height: 27px;
+  border-radius: 6px;
+  background: rgb(143 184 255 / 12%);
+  box-shadow: inset 0 0 0 1px rgb(143 184 255 / 50%);
+  opacity: 0;
+  transition:
+    opacity 0.35s,
+    left 0.35s var(--ease),
+    width 0.35s var(--ease);
+  pointer-events: none;
+
+  &.isOn {
+    opacity: 1;
+  }
+
+  &.isPending {
+    background: rgb(143 184 255 / 7%);
+    box-shadow: inset 0 0 0 1px rgb(143 184 255 / 32%);
+    transition: opacity 0.35s;
+  }
+}
+
+.dot {
+  position: absolute;
+  top: 24px;
+  width: 11px;
+  height: 11px;
+  margin-left: -5.5px;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  background: var(--bg);
+  transition:
+    background 0.5s,
+    box-shadow 0.5s,
+    border-color 0.5s,
+    opacity 0.5s;
+  pointer-events: none;
+
+  &.isPast {
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  &.isAhead {
+    border-color: var(--accent-2);
+    background: var(--accent-2);
+    box-shadow: 0 0 10px rgb(143 184 255 / 80%);
+  }
+
+  &.isOut {
+    opacity: 0.25;
+  }
+}
+
+.year {
+  position: absolute;
+  top: 40px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 11px;
+  color: var(--muted);
+  transform: translateX(-50%);
+  transition:
+    color 0.5s,
+    background 0.3s;
+
+  &:hover {
+    color: var(--text);
+    background: rgb(127 137 163 / 15%);
+  }
+
+  &.isIn {
+    color: var(--text);
+  }
+
+  &.isCurrent {
+    color: var(--accent);
+  }
+}
+
+.short {
+  display: none;
+}
+
+.knob {
+  position: absolute;
+  top: 14px;
+  width: 2px;
+  height: 30px;
+  margin-left: -1px;
+  background: var(--text);
+  transition:
+    left 1.2s cubic-bezier(0.3, 0.7, 0.2, 1),
+    opacity 0.4s;
+  pointer-events: none;
+}
+
+.handle {
+  position: absolute;
+  top: 10px;
+  width: 34px;
+  height: 40px;
+  margin-left: -17px;
+  cursor: ew-resize;
+  touch-action: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 12px;
+    width: 10px;
+    height: 34px;
+    border-radius: 5px;
+    background: var(--accent-2);
+    box-shadow: 0 0 12px rgb(143 184 255 / 70%);
+  }
+}
+
+.shrink {
+  align-self: flex-end;
+  margin-right: auto;
+  padding: var(--space-4) var(--space-12);
+  border: 1px solid rgb(127 137 163 / 40%);
+  border-radius: 99px;
+  background: rgb(12 16 30 / 80%);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.tip {
+  position: absolute;
+  bottom: 48px;
+  padding: var(--space-4) var(--space-8);
+  border-radius: 6px;
+  background: rgb(20 26 44 / 92%);
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--text);
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+@media (width <= 767px) {
+  .timeline {
+    padding-inline: var(--space-16);
+  }
+
+  .chips {
+    padding-left: 0;
+  }
+
+  .full {
+    display: none;
+  }
+
+  .short {
+    display: inline;
+  }
+
+  .year {
+    padding: 2px;
+  }
+
+  .timeline.zoom .scroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  /* a wide strip: about a hundred px for a year, so dots and ends can be aimed at */
+  .timeline.zoom .track {
+    width: calc(var(--years) * 100px);
+    min-width: 100%;
+    touch-action: pan-x;
+  }
+
+  .timeline.zoom .full {
+    display: inline;
+  }
+
+  .timeline.zoom .short {
+    display: none;
+  }
+}

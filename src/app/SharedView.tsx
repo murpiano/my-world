@@ -5,7 +5,7 @@ import type { SharedPhoto, SharedTrip } from '@/backend/sharing';
 import { startBackend } from '@/backend/session';
 import { photoState, profileState } from './profile';
 import type { Route } from './route';
-import './shared.scss';
+import styles from './SharedView.module.css';
 
 /**
  * The visitor's own sign-in, if any: it is what makes 'registered' content visible to them. These
@@ -19,7 +19,7 @@ const viewerBearer = async (): Promise<string | undefined> => {
 /** The flat "not available": a private item, a revoked link, an unknown handle, all alike. */
 export function Away() {
   return (
-    <div className="shared shared--away">
+    <div className={`${styles.shared} ${styles.isAway}`}>
       <p>Not available.</p>
       <a href={import.meta.env.BASE_URL}>My World</a>
     </div>
@@ -48,11 +48,12 @@ export function SharedView({ route }: { route: Extract<Route, { kind: 'profile' 
   }, [route.handle]);
 
   const state = profileState(trips);
-  if (state.status === 'loading') return <div className="shared shared--loading">Loading…</div>;
+  if (state.status === 'loading')
+    return <div className={`${styles.shared} ${styles.isLoading}`}>Loading…</div>;
   if (state.status === 'away') return <Away />;
 
   return (
-    <div className="shared">
+    <div className={styles.shared}>
       <h1>@{route.handle}</h1>
       <ul>
         {state.trips.map((trip) => (
@@ -89,11 +90,12 @@ export function SharedPhotoView({ route }: { route: Extract<Route, { kind: 'shar
   }, [route.owner, route.item, route.token]);
 
   const state = photoState(answer);
-  if (state.status === 'loading') return <div className="shared shared--loading">Loading…</div>;
+  if (state.status === 'loading')
+    return <div className={`${styles.shared} ${styles.isLoading}`}>Loading…</div>;
   if (state.status === 'away') return <Away />;
 
   return (
-    <div className="shared shared--photo">
+    <div className={`${styles.shared} ${styles.isPhoto}`}>
       <img src={state.url} alt={state.caption ?? ''} />
       {state.caption && <p>{state.caption}</p>}
       <a href={import.meta.env.BASE_URL}>My World</a>

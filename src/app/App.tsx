@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Header } from '@/features/header/Header';
+import { Header } from '@/features/header';
 import { loadWorld } from './boot';
 import { currentRoute } from './route';
 import type { World } from './boot';

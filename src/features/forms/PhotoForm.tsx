@@ -31,6 +31,7 @@ export function PhotoForm({
 
   return (
     <Sheet title="Edit photo" onClose={onClose}>
+      {/* alt="": the Caption field right below is what this photo is captioned */}
       {url && <img className={styles.pic} src={url} alt="" />}
       <Field label="Caption" htmlFor="fCap">
         <textarea

@@ -299,6 +299,7 @@ function YearGroups({ albums, showCity }: { albums: Album[]; showCity: boolean }
 
 function Cover({ photo }: { photo: PhotoRef | undefined }) {
   const url = photo ? photoUrl(photo) : null;
+  // alt="": every caller renders this beside the card's own name/date, which says what it is
   return url ? <img src={url} alt="" loading="lazy" /> : null;
 }
 
@@ -378,6 +379,7 @@ function Folder({ album, showCity }: { album: Album; showCity: boolean }) {
   return (
     <button type="button" className={styles.folder} onClick={() => go({ kind: 'album', id: album.id })}>
       <div className={styles.stack}>
+        {/* alt="": the title/date below in .front already says what this album is */}
         {photos.map((photo, i) => (
           <img key={i} src={photoUrl(photo) ?? undefined} alt="" loading="lazy" />
         ))}
@@ -451,6 +453,7 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
           <div key={key} className={styles.pic}>
             <button type="button" className={styles.open} onClick={(event) => open(event.currentTarget)}>
               <div className={styles.photo} data-photo-frame>
+                {/* alt="": the caption paragraph right below is the owner's own note on this photo */}
                 <img src={photoUrl(photo) ?? undefined} alt="" loading="lazy" data-photo-key={key} />
                 <div className={styles.meta}>
                   <span>

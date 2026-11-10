@@ -8,7 +8,7 @@ import { tripOfAlbum } from '@/data/trips';
 import type { Album, Credit } from '@/data/types';
 import { monthYear } from '@/lib/dates';
 import { useInterval } from '@/lib/useInterval';
-import { goArchive } from '@/features/archive/links';
+import { goArchive } from '@/features/archive';
 import { appStore } from '@/state/app-state';
 import { openPhoto } from '@/state/layers';
 import { settingsStore } from '@/state/settings';

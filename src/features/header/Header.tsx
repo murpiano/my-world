@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { World } from '@/app/boot';
 import { plural } from '@/archive/pages';
 import { journeyStats } from '@/data/stats';
-import { goArchive } from '@/features/archive/links';
+import { goArchive } from '@/features/archive';
 import { currentRoute } from '@/app/route';
 import { appStore } from '@/state/app-state';
 import { openForm, toggleMenu } from '@/state/layers';

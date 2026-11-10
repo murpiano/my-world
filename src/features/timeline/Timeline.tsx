@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { useDirector } from '@/app/director-context';
-import { goArchive } from '@/features/archive';
+import { goArchive } from '@/features/archive/links';
 import type { Archive } from '@/data/archive';
 import { monthYear } from '@/lib/dates';
 import { useMobile } from '@/lib/useMedia';

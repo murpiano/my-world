@@ -4,7 +4,7 @@ import type { World } from '@/app/boot';
 import { creditLine, photoUrl } from '@/data/photos';
 import { describeAlbum, photoKey, photoNote } from '@/data/social';
 import type { Album } from '@/data/types';
-import { goArchive } from '@/features/archive';
+import { goArchive } from '@/features/archive/links';
 import { wheelSteps } from '@/features/panel';
 import { monthYear } from '@/lib/dates';
 import { useInterval } from '@/lib/useInterval';

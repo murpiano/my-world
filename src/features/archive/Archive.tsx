@@ -9,7 +9,7 @@ import { cityPhotos, photoUrl } from '@/data/photos';
 import { describeAlbum, photoKey, photoNote } from '@/data/social';
 import type { Album, City, Country, PhotoRef } from '@/data/types';
 import { attachPhotos } from '@/features/forms/attach';
-import { DropZone } from '@/features/forms';
+import { DropZone } from '@/features/forms/DropZone';
 import { MONTHS } from '@/lib/dates';
 import { appStore } from '@/state/app-state';
 import type { ArchivePage, FormView } from '@/state/app-state';

@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Archive, useArchiveReturn } from '@/features/archive';
+import { lazy, Suspense, useEffect, useState } from 'react';
+// deep import, not the barrel: keeps this hook out of the lazy chunks below
+import { useArchiveReturn } from '@/features/archive/useArchiveReturn';
 import { GlobeStage } from '@/features/globe';
-import { Forms } from '@/features/forms';
 import { useKeys } from '@/features/keys';
-import { Lightbox } from '@/features/lightbox';
 import { AlbumPanel } from '@/features/panel';
 import { Timeline } from '@/features/timeline';
 import { appStore } from '@/state/app-state';
@@ -13,6 +12,11 @@ import { settingsStore } from '@/state/settings';
 import { createDirector } from '@/tour/director';
 import type { World } from './boot';
 import { DirectorContext } from './director-context';
+
+// not needed for the globe's first paint: split out of the main bundle
+const Archive = lazy(() => import('@/features/archive').then((m) => ({ default: m.Archive })));
+const Lightbox = lazy(() => import('@/features/lightbox').then((m) => ({ default: m.Lightbox })));
+const Forms = lazy(() => import('@/features/forms').then((m) => ({ default: m.Forms })));
 
 /** The main screen once the world is loaded: one director for the globe, the panel, the timeline. */
 export function Stage({ world }: { world: World }) {
@@ -44,9 +48,11 @@ export function Stage({ world }: { world: World }) {
       <GlobeStage world={world} director={director} />
       <AlbumPanel world={world} />
       <Timeline archive={world.archive} />
-      <Archive world={world} director={director} />
-      <Lightbox world={world} />
-      <Forms world={world} />
+      <Suspense fallback={null}>
+        <Archive world={world} director={director} />
+        <Lightbox world={world} />
+        <Forms world={world} />
+      </Suspense>
     </DirectorContext>
   );
 }

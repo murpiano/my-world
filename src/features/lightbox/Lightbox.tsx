@@ -383,6 +383,7 @@ function Slide({ src, offset, from }: { src: string | null; offset: number; from
       style={{ '--offset': offset } as CSSProperties}
     >
       {src && <div className={styles.backdrop} style={{ backgroundImage: `url("${src}")` }} />}
+      {/* alt="": the info panel beside it (city, album, date, description) already says what this is */}
       {src && <img className={styles.photo} src={src} alt="" draggable={false} />}
     </div>
   );

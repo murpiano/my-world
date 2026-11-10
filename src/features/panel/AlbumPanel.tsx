@@ -294,6 +294,7 @@ function AlbumCard({
       }}
     >
       <div className={styles.pan}>
+        {/* alt="": the card's title/date/credit below already says what this album is */}
         {photos.map((ref, i) => (
           <img
             key={i}
@@ -338,6 +339,7 @@ function EndSlot({ world }: { world: World }) {
       <div className={`${styles.card} ${styles.cur} ${styles.end}`}>
         {url ? (
           <div className={styles.pan}>
+            {/* alt="": the Caption right after this card says where this is */}
             <img className={styles.isOn} src={url} alt="" />
           </div>
         ) : (

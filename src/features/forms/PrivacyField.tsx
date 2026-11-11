@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { backend } from '@/backend/session';
 import type { VisibilityKind, VisibilityLevel } from '@/backend/types';
 import type { Id } from '@/data/types';
 import { shareLink } from './share-link';
 import { Btn, Field } from './Sheet';
 
-const LABEL: Record<VisibilityLevel, string> = {
-  private: 'Private — only me',
-  link: 'Anyone with the link',
-  registered: 'Anyone signed in',
-  public: 'Anyone',
+const LABEL_KEY: Record<VisibilityLevel, string> = {
+  private: 'forms.privacyLevelPrivate',
+  link: 'forms.privacyLevelLink',
+  registered: 'forms.privacyLevelRegistered',
+  public: 'forms.privacyLevelPublic',
 };
 
-const LEVELS = Object.keys(LABEL) as VisibilityLevel[];
+const LEVELS = Object.keys(LABEL_KEY) as VisibilityLevel[];
 
 /**
  * Who may see this one trip, album or photo. Nothing without a backend: sharing needs a server
@@ -28,6 +29,7 @@ export function PrivacyField({
   itemId: Id;
   accountId: string;
 }) {
+  const { t: tr } = useTranslation();
   // one storage for the life of the field: a new one each render would read the setting again
   // after every change, and a read sent before the change lands would undo it on screen
   const storage = useMemo(() => backend()?.storage(accountId), [accountId]);
@@ -48,13 +50,13 @@ export function PrivacyField({
         setLinkToken(setting.linkToken);
       },
       () => {
-        if (live) setTrouble('The sharing setting could not be read.');
+        if (live) setTrouble(tr('forms.privacyReadFailed'));
       },
     );
     return () => {
       live = false;
     };
-  }, [storage, kind, itemId]);
+  }, [storage, kind, itemId, tr]);
 
   if (!storage) return null;
 
@@ -68,7 +70,7 @@ export function PrivacyField({
       setLinkToken(saved.linkToken);
     } catch {
       setLevel(was);
-      setTrouble('The sharing setting could not be saved.');
+      setTrouble(tr('forms.privacySaveFailed'));
     }
   };
 
@@ -76,7 +78,7 @@ export function PrivacyField({
 
   return (
     <Field>
-      <label htmlFor={`fPrivacy-${itemId}`}>Who can see it</label>
+      <label htmlFor={`fPrivacy-${itemId}`}>{tr('forms.whoCanSeeIt')}</label>
       <select
         id={`fPrivacy-${itemId}`}
         value={level}
@@ -84,7 +86,7 @@ export function PrivacyField({
       >
         {LEVELS.map((one) => (
           <option key={one} value={one}>
-            {LABEL[one]}
+            {tr(LABEL_KEY[one])}
           </option>
         ))}
       </select>
@@ -99,11 +101,11 @@ export function PrivacyField({
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1500);
               },
-              () => setTrouble('The link could not be copied. Take it from the box above.'),
+              () => setTrouble(tr('forms.copyFailed')),
             );
           }}
         >
-          {copied ? 'Copied' : 'Copy link'}
+          {copied ? tr('forms.copied') : tr('forms.copyLink')}
         </Btn>
       )}
       {trouble && <small>{trouble}</small>}

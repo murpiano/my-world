@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import type { PickedPlace } from '@/data/places';
 import { pad2 } from '@/lib/math';
 
@@ -25,24 +26,27 @@ export const MIN_PASSWORD = 6;
  * The first thing wrong with an account's fields, in words for the person, or null when all is
  * well. A password left empty is fine when `passwordOptional` (an account that is only edited).
  */
-export const accountProblem = (fields: {
-  name: string;
-  email: string;
-  password: string;
-  again?: string;
-  home: PickedPlace | null;
-  passwordOptional?: boolean;
-}): string | null => {
-  if (fields.name.trim().length < 2) return 'Enter your name (at least two letters).';
-  if (!MAIL.test(fields.email.trim())) return 'Enter an email like name@example.com.';
+export const accountProblem = (
+  fields: {
+    name: string;
+    email: string;
+    password: string;
+    again?: string;
+    home: PickedPlace | null;
+    passwordOptional?: boolean;
+  },
+  tr: TFunction,
+): string | null => {
+  if (fields.name.trim().length < 2) return tr('forms.nameTooShort');
+  if (!MAIL.test(fields.email.trim())) return tr('forms.emailInvalid');
   const mustHave = !fields.passwordOptional || fields.password !== '';
   if (mustHave && fields.password.length < MIN_PASSWORD) {
-    return `The password needs at least ${MIN_PASSWORD} characters.`;
+    return tr('forms.passwordTooShort', { min: MIN_PASSWORD });
   }
   if (fields.again !== undefined && fields.password !== fields.again) {
-    return 'The two passwords do not match.';
+    return tr('forms.passwordsDontMatch');
   }
-  if (!fields.home) return 'Pick your home base from the list of cities.';
+  if (!fields.home) return tr('forms.homeRequired');
   return null;
 };
 
@@ -50,19 +54,19 @@ export const accountProblem = (fields: {
  * What is wrong with a public handle, in the same words the database's own rule enforces
  * (`^[a-z0-9-]{3,30}$`). Empty means "leave the handle alone", which is always fine.
  */
-export const handleProblem = (handle: string): string | null => {
+export const handleProblem = (handle: string, tr: TFunction): string | null => {
   const wanted = handle.trim();
   if (wanted === '') return null;
-  if (wanted.length < 3) return 'A handle needs at least three characters.';
-  if (wanted.length > 30) return 'A handle can be at most thirty characters.';
+  if (wanted.length < 3) return tr('forms.handleTooShort');
+  if (wanted.length > 30) return tr('forms.handleTooLong');
   if (!/^[a-z0-9-]+$/.test(wanted)) {
-    return 'A handle takes lowercase letters, numbers and hyphens only.';
+    return tr('forms.handleInvalidChars');
   }
   return null;
 };
 
 /** What is wrong with a sign-in: only the pair is needed, and the service checks the password. */
-export const signInProblem = (email: string, password: string): string | null => {
-  if (!MAIL.test(email.trim())) return 'Enter an email like name@example.com.';
-  return password ? null : 'Enter your password.';
+export const signInProblem = (email: string, password: string, tr: TFunction): string | null => {
+  if (!MAIL.test(email.trim())) return tr('forms.emailInvalid');
+  return password ? null : tr('forms.passwordRequired');
 };

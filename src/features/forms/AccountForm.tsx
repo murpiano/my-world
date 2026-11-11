@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Archive } from '@/data/archive';
 import type { PickedPlace } from '@/data/places';
 import { friendlyError } from '@/backend/account';
@@ -13,6 +14,7 @@ import { Acts, Btn, Field, Note, Row, Sheet } from './Sheet';
 
 /** Name, email, a new password twice, the home base, and a way back to the demo. */
 export function AccountForm({ archive, onClose }: { archive: Archive; onClose: () => void }) {
+  const { t: tr } = useTranslation();
   const user = userStore.get().user;
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
@@ -25,14 +27,17 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
   if (!user) return null;
 
   const problem =
-    accountProblem({
-      name,
-      email,
-      password: pass,
-      again,
-      home,
-      passwordOptional: true,
-    }) ?? handleProblem(handle);
+    accountProblem(
+      {
+        name,
+        email,
+        password: pass,
+        again,
+        home,
+        passwordOptional: true,
+      },
+      tr,
+    ) ?? handleProblem(handle, tr);
   const submit = async () => {
     if (problem || !home || busy) return;
     const { name: city, country, countryId, lat, lon } = home;
@@ -63,12 +68,8 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
   };
 
   return (
-    <Sheet
-      title="Account"
-      lead="Your home base is where every trip starts and comes back to, unless a trip says otherwise."
-      onClose={onClose}
-    >
-      <Field label="Name" htmlFor="fName">
+    <Sheet title={tr('forms.accountTitle')} lead={tr('forms.accountLead')} onClose={onClose}>
+      <Field label={tr('forms.name')} htmlFor="fName">
         <input
           id="fName"
           autoComplete="name"
@@ -76,7 +77,7 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
           onChange={(event) => setName(event.target.value)}
         />
       </Field>
-      <Field label="Email" htmlFor="fMail">
+      <Field label={tr('forms.email')} htmlFor="fMail">
         <input
           id="fMail"
           type="email"
@@ -86,18 +87,20 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
         />
       </Field>
       {backend() && (
-        <Field label="Public handle" htmlFor="fHandle">
+        <Field label={tr('forms.publicHandle')} htmlFor="fHandle">
           <input
             id="fHandle"
             value={handle}
-            placeholder="your-name"
+            placeholder={tr('forms.handlePlaceholder')}
             onChange={(event) => setHandle(event.target.value.toLowerCase())}
           />
-          <small>Your shared trips live at /u/{handle.trim() || 'your-name'}</small>
+          <small>
+            {tr('forms.sharedTripsAt', { handle: handle.trim() || tr('forms.handlePlaceholder') })}
+          </small>
         </Field>
       )}
       <Row>
-        <Field label="New password" htmlFor="fPass">
+        <Field label={tr('forms.newPassword')} htmlFor="fPass">
           <input
             id="fPass"
             type="password"
@@ -106,7 +109,7 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
             onChange={(event) => setPass(event.target.value)}
           />
         </Field>
-        <Field label="Repeat it" htmlFor="fPass2">
+        <Field label={tr('forms.repeatIt')} htmlFor="fPass2">
           <input
             id="fPass2"
             type="password"
@@ -116,29 +119,27 @@ export function AccountForm({ archive, onClose }: { archive: Archive; onClose: (
           />
         </Field>
       </Row>
-      <PlaceField id="fHome" label="Home base" archive={archive} value={home} onPick={setHome} />
+      <PlaceField id="fHome" label={tr('forms.homeBase')} archive={archive} value={home} onPick={setHome} />
       <BackupBox archive={archive} />
       <Acts>
         <ConfirmButton
-          label="Reset archive to the demo"
-          ask="Lose every change?"
+          label={tr('forms.resetToDemo')}
+          ask={tr('forms.loseEveryChange')}
           onConfirm={() => {
             void repository()
               ?.clear()
               .then(() => location.reload());
           }}
         />
-        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn onClick={onClose}>{tr('forms.cancel')}</Btn>
         <Btn variant="main" disabled={problem !== null || busy} onClick={() => void submit()}>
-          Save
+          {tr('forms.save')}
         </Btn>
       </Acts>
       <Note>
         {error ??
           problem ??
-          (backend()
-            ? 'Changing the email sends a link to confirm it.'
-            : 'The password is not stored anywhere yet.')}
+          (backend() ? tr('forms.emailChangeNote') : tr('forms.passwordNotStoredNote'))}
       </Note>
     </Sheet>
   );

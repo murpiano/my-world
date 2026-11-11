@@ -52,10 +52,6 @@ export const journeys = (archive: Archive): Journey[] => {
 export const journeyOfAlbum = (archive: Archive, albumId: string): Journey | undefined =>
   journeys(archive).find((journey) => journey.albums.some((album) => album.id === albumId));
 
-/** "1 album", "3 cities", "2 days". */
-export const plural = (n: number, word: string): string =>
-  `${n.toLocaleString('en')} ${n === 1 ? word : /[^aeiou]y$/.test(word) ? `${word.slice(0, -1)}ies` : `${word}s`}`;
-
 const month = (album: Album) => MONTHS[album.month - 1] ?? '';
 
 /** "Apr 2022", "Mar – Apr 2019" or "Oct 2017 – Jun 2020". */

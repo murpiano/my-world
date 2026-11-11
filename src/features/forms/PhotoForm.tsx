@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
 import { removePhoto, setCaption } from '@/data/edits';
 import { photoUrl } from '@/data/photos';
@@ -22,6 +23,7 @@ export function PhotoForm({
   photoKey: string;
   onClose: () => void;
 }) {
+  const { t: tr } = useTranslation();
   const album = world.archive.albumById.get(albumId);
   const photo = album?.photos.find((one) => photoKey(one) === key);
   const [caption, setText] = useState(photo?.caption ?? '');
@@ -30,10 +32,10 @@ export function PhotoForm({
   const url = photoUrl(photo);
 
   return (
-    <Sheet title="Edit photo" onClose={onClose}>
+    <Sheet title={tr('forms.editPhotoTitle')} onClose={onClose}>
       {/* alt="": the Caption field right below is what this photo is captioned */}
       {url && <img className={styles.pic} src={url} alt="" />}
-      <Field label="Caption" htmlFor="fCap">
+      <Field label={tr('forms.caption')} htmlFor="fCap">
         <textarea
           id="fCap"
           placeholder={photoNote(photo)}
@@ -46,8 +48,8 @@ export function PhotoForm({
       )}
       <Acts>
         <ConfirmButton
-          label="Delete photo"
-          ask="Delete it from the album?"
+          label={tr('forms.deletePhoto')}
+          ask={tr('forms.deleteFromAlbum')}
           onConfirm={() => {
             run(async (data, repo) => {
               const gone = removePhoto(data, albumId, key);
@@ -55,14 +57,14 @@ export function PhotoForm({
             });
           }}
         />
-        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn onClick={onClose}>{tr('forms.cancel')}</Btn>
         <Btn
           variant="main"
           onClick={() => {
             run((data) => setCaption(data, albumId, key, caption));
           }}
         >
-          Save
+          {tr('forms.save')}
         </Btn>
       </Acts>
       {trouble && <Note>{trouble}</Note>}

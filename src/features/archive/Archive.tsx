@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
-import { albumsByYear, coverOf, dateSpan, findPage, folderPhotos, plural, whenLabel } from '@/archive/pages';
+import { albumsByYear, coverOf, dateSpan, findPage, folderPhotos, whenLabel } from '@/archive/pages';
 import type { Journey, PageData } from '@/archive/pages';
 import { visitYears } from '@/data/archive';
 import { addPhotos } from '@/data/edits';
@@ -10,7 +12,6 @@ import { describeAlbum, photoKey, photoNote } from '@/data/social';
 import type { Album, City, Country, PhotoRef } from '@/data/types';
 import { attachPhotos } from '@/features/forms/attach';
 import { DropZone } from '@/features/forms/DropZone';
-import { MONTHS } from '@/lib/dates';
 import { appStore } from '@/state/app-state';
 import type { ArchivePage, FormView } from '@/state/app-state';
 import { backArchive, closeArchive, openArchive, SECTIONS, sectionOf } from '@/state/archive-nav';
@@ -26,6 +27,7 @@ const go = (page: ArchivePage) => openArchive(appStore, page, false);
 
 /** The archive: a full-screen layer over the paused globe. */
 export function Archive({ world, director }: { world: World; director: Director }) {
+  const { t: tr } = useTranslation();
   const view = useStore(appStore, (s) => s.archive);
   // an edit changes the archive in place: this makes the page show it at once
   useStore(ownerStore, (s) => s.rev);
@@ -47,20 +49,27 @@ export function Archive({ world, director }: { world: World; director: Director 
 
   if (!view || !page || !data) return null;
 
-  const header = headerOf(data);
+  const header = headerOf(data, tr);
+  const tabLabel: Record<(typeof SECTIONS)[number]['key'], string> = {
+    trips: tr('archive.tabTrips'),
+    albums: tr('archive.tabAlbums'),
+    countries: tr('archive.tabCountries'),
+    cities: tr('archive.tabCities'),
+    years: tr('archive.tabYears'),
+  };
   return (
     <section
       className={`${styles.archive}${shown ? ` ${styles.isOn}` : ''}${view.slow ? ` ${styles.isSlow}` : ''}`}
       data-archive-root
-      aria-label="Archive"
+      aria-label={tr('archive.ariaLabel')}
     >
       <div className={styles.head}>
         <div className={styles.bar}>
-          <button type="button" className={styles.round} aria-label="Close" onClick={() => closeArchive(appStore)}>
+          <button type="button" className={styles.round} aria-label={tr('archive.close')} onClick={() => closeArchive(appStore)}>
             ✕
           </button>
           {view.stack.length > 1 && (
-            <button type="button" className={styles.round} aria-label="Back" onClick={() => backArchive(appStore)}>
+            <button type="button" className={styles.round} aria-label={tr('archive.back')} onClick={() => backArchive(appStore)}>
               ←
             </button>
           )}
@@ -72,7 +81,7 @@ export function Archive({ world, director }: { world: World; director: Director 
                 className={sectionOf(view.stack[0] ?? page) === section.key ? styles.isOn : undefined}
                 onClick={() => openArchive(appStore, { kind: section.key }, true)}
               >
-                {section.label}
+                {tabLabel[section.key]}
               </button>
             ))}
           </nav>
@@ -100,11 +109,11 @@ export function Archive({ world, director }: { world: World; director: Director 
                   className={`${styles.btn} ${styles.isStar}`}
                   onClick={() => header.map && showOnMap(director, header.map)}
                 >
-                  ◎ Show on map
+                  {tr('archive.showOnMap')}
                 </button>
               )}
               {owner &&
-                editsOf(data).map((edit) => (
+                editsOf(data, tr).map((edit) => (
                   <button
                     key={edit.label}
                     type="button"
@@ -135,28 +144,34 @@ interface Header {
   map: Parameters<typeof showOnMap>[1] | null;
 }
 
-const headerOf = (data: PageData): Header => {
+const headerOf = (data: PageData, tr: TFunction): Header => {
   const photos = (albums: Album[]) => albums.reduce((sum, a) => sum + a.photoCount, 0);
+  const home = tr('archive.home');
   switch (data.kind) {
     case 'trips':
-      return { crumbs: [], title: 'Trips', sub: plural(data.journeys.length, 'trip'), map: null };
+      return {
+        crumbs: [],
+        title: tr('archive.tabTrips'),
+        sub: tr('archive.tripCount', { count: data.journeys.length }),
+        map: null,
+      };
     case 'trip': {
       const { journey } = data;
       const places = new Set(journey.albums.map((a) => a.city)).size;
-      const start = data.route[0]?.place.replace(/^home · .*/, 'home') ?? 'home';
-      const end = data.route[data.route.length - 1]?.place.replace(/^home · .*/, 'home') ?? 'home';
+      const start = data.route[0]?.place.replace(/^home · .*/, home) ?? home;
+      const end = data.route[data.route.length - 1]?.place.replace(/^home · .*/, home) ?? home;
       return {
-        crumbs: [['Trips', { kind: 'trips' }]],
+        crumbs: [[tr('archive.tabTrips'), { kind: 'trips' }]],
         title: journey.name,
-        sub: `${dateSpan(journey.albums)} · ${plural(places, 'place')} · ${plural(photos(journey.albums), 'photo')} · from ${start} to ${end}`,
+        sub: `${dateSpan(journey.albums)} · ${tr('archive.placeCount', { count: places })} · ${tr('archive.photoCount', { count: photos(journey.albums) })} · ${tr('archive.tripRoute', { start, end })}`,
         map: journey.albums.length > 0 && journey.real ? { kind: 'trip', id: journey.id } : null,
       };
     }
     case 'albums':
       return {
         crumbs: [],
-        title: 'Albums',
-        sub: `${plural(data.albums.length, 'album')} · ${plural(photos(data.albums), 'photo')}`,
+        title: tr('archive.tabAlbums'),
+        sub: `${tr('archive.albumCount', { count: data.albums.length })} · ${tr('archive.photoCount', { count: photos(data.albums) })}`,
         map: null,
       };
     case 'album': {
@@ -165,7 +180,8 @@ const headerOf = (data: PageData): Header => {
         [album.city.country.name, { kind: 'country', id: album.city.country.id }],
         [album.city.name, { kind: 'city', key: album.city.key }],
       ];
-      if (journey?.real) crumbs.push([`Trip: ${journey.name}`, { kind: 'trip', id: journey.id }]);
+      if (journey?.real)
+        crumbs.push([tr('archive.tripCrumb', { name: journey.name }), { kind: 'trip', id: journey.id }]);
       return {
         crumbs,
         title: album.title,
@@ -174,34 +190,49 @@ const headerOf = (data: PageData): Header => {
       };
     }
     case 'countries':
-      return { crumbs: [], title: 'Countries', sub: plural(data.countries.length, 'country'), map: null };
+      return {
+        crumbs: [],
+        title: tr('archive.tabCountries'),
+        sub: tr('archive.countryCount', { count: data.countries.length }),
+        map: null,
+      };
     case 'country': {
       const albums = data.cities.reduce((n, c) => n + c.albums.length, 0);
       return {
-        crumbs: [['Countries', { kind: 'countries' }]],
+        crumbs: [[tr('archive.tabCountries'), { kind: 'countries' }]],
         title: data.country.name,
-        sub: `${plural(data.cities.length, 'city')} · ${plural(albums, 'album')}`,
+        sub: `${tr('archive.cityCount', { count: data.cities.length })} · ${tr('archive.albumCount', { count: albums })}`,
         map: null,
       };
     }
     case 'cities':
-      return { crumbs: [], title: 'Cities', sub: plural(data.cities.length, 'place'), map: null };
+      return {
+        crumbs: [],
+        title: tr('archive.tabCities'),
+        sub: tr('archive.placeCount', { count: data.cities.length }),
+        map: null,
+      };
     case 'city':
       return {
         crumbs: [
-          ['Cities', { kind: 'cities' }],
+          [tr('archive.tabCities'), { kind: 'cities' }],
           [data.city.country.name, { kind: 'country', id: data.city.country.id }],
         ],
         title: data.city.name,
-        sub: `${plural(data.city.albums.length, 'album')} · ${plural(photos(data.city.albums), 'photo')}`,
+        sub: `${tr('archive.albumCount', { count: data.city.albums.length })} · ${tr('archive.photoCount', { count: photos(data.city.albums) })}`,
         map: null,
       };
     case 'years':
-      return { crumbs: [], title: 'Years', sub: plural(data.years.length, 'year'), map: null };
+      return {
+        crumbs: [],
+        title: tr('archive.tabYears'),
+        sub: tr('archive.yearCount', { count: data.years.length }),
+        map: null,
+      };
     case 'year':
       return {
-        crumbs: [['Years', { kind: 'years' }]],
-        title: `${data.year} · ${plural(data.albums.length, 'album')}`,
+        crumbs: [[tr('archive.tabYears'), { kind: 'years' }]],
+        title: `${data.year} · ${tr('archive.albumCount', { count: data.albums.length })}`,
         sub: '',
         map: { kind: 'year', year: data.year },
       };
@@ -209,18 +240,18 @@ const headerOf = (data: PageData): Header => {
 };
 
 /** What the owner can start from this page. */
-const editsOf = (data: PageData): { label: string; form: FormView }[] => {
+const editsOf = (data: PageData, tr: TFunction): { label: string; form: FormView }[] => {
   const newAlbum = (cityKey: string | null, tripId: string | null) => ({
-    label: '+ New album',
+    label: tr('archive.newAlbum'),
     form: { kind: 'album', id: null, cityKey, tripId } as FormView,
   });
   switch (data.kind) {
     case 'trips':
-      return [{ label: '+ New trip', form: { kind: 'trip', id: null, albumIds: [] } }];
+      return [{ label: tr('archive.newTrip'), form: { kind: 'trip', id: null, albumIds: [] } }];
     case 'trip':
       return [
         {
-          label: '✎ Edit trip',
+          label: tr('archive.editTrip'),
           form: { kind: 'trip', id: data.journey.id, albumIds: data.journey.albums.map((a) => a.id) },
         },
         newAlbum(null, data.journey.real ? data.journey.id : null),
@@ -229,7 +260,10 @@ const editsOf = (data: PageData): { label: string; form: FormView }[] => {
       return [newAlbum(data.city.key, null)];
     case 'album':
       return [
-        { label: '✎ Edit album', form: { kind: 'album', id: data.album.id, cityKey: null, tripId: null } },
+        {
+          label: tr('archive.editAlbum'),
+          form: { kind: 'album', id: data.album.id, cityKey: null, tripId: null },
+        },
       ];
     default:
       return [newAlbum(null, null)];
@@ -320,6 +354,7 @@ function TripCard({ journey }: { journey: Journey }) {
 }
 
 function CountryCard({ country }: { country: Country }) {
+  const { t: tr } = useTranslation();
   const cities = country.cities.filter((c) => c.albums.length > 0);
   const albums = cities.reduce((n, c) => n + c.albums.length, 0);
   return (
@@ -328,7 +363,7 @@ function CountryCard({ country }: { country: Country }) {
       <div>
         <b>{country.name}</b>
         <span>
-          {plural(cities.length, 'city')} · {plural(albums, 'album')}
+          {tr('archive.cityCount', { count: cities.length })} · {tr('archive.albumCount', { count: albums })}
         </span>
       </div>
     </button>
@@ -336,6 +371,7 @@ function CountryCard({ country }: { country: Country }) {
 }
 
 function CityCard({ city }: { city: City }) {
+  const { t: tr } = useTranslation();
   const years = visitYears(city);
   const first = years[0];
   const last = years[years.length - 1];
@@ -345,7 +381,7 @@ function CityCard({ city }: { city: City }) {
       <div>
         <b>{city.name}</b>
         <span>
-          {plural(city.albums.length, 'album')} · {first}
+          {tr('archive.albumCount', { count: city.albums.length })} · {first}
           {last !== undefined && last !== first ? `–${last}` : ''}
         </span>
       </div>
@@ -354,6 +390,7 @@ function CityCard({ city }: { city: City }) {
 }
 
 function YearCard({ year, world }: { year: number; world: World }) {
+  const { t: tr } = useTranslation();
   const albums = world.archive.albums.filter((a) => a.year === year);
   const places = new Set(albums.map((a) => a.city)).size;
   return (
@@ -366,7 +403,7 @@ function YearCard({ year, world }: { year: number; world: World }) {
       <div>
         <b>{year}</b>
         <span>
-          {plural(albums.length, 'album')} · {plural(places, 'place')}
+          {tr('archive.albumCount', { count: albums.length })} · {tr('archive.placeCount', { count: places })}
         </span>
       </div>
     </button>
@@ -375,7 +412,13 @@ function YearCard({ year, world }: { year: number; world: World }) {
 
 /** A stack of three photos in a folder that fans out on hover. */
 function Folder({ album, showCity }: { album: Album; showCity: boolean }) {
+  const { t: tr, i18n } = useTranslation();
   const photos = [...folderPhotos(album)].reverse();
+  const when = new Date(album.year, album.month - 1, album.day).toLocaleDateString(i18n.language, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
   return (
     <button type="button" className={styles.folder} onClick={() => go({ kind: 'album', id: album.id })}>
       <div className={styles.stack}>
@@ -387,7 +430,7 @@ function Folder({ album, showCity }: { album: Album; showCity: boolean }) {
           <b>{album.title}</b>
           <span>
             {showCity ? `${album.city.name} · ` : ''}
-            {album.day} {MONTHS[album.month - 1]} {album.year} · {plural(album.photoCount, 'photo')}
+            {when} · {tr('archive.photoCount', { count: album.photoCount })}
           </span>
         </div>
       </div>
@@ -396,6 +439,7 @@ function Folder({ album, showCity }: { album: Album; showCity: boolean }) {
 }
 
 function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
+  const { t: tr } = useTranslation();
   useStore(socialStore, (s) => s.byKey);
   const [trouble, setTrouble] = useState<string | null>(null);
   const add = async (files: File[]) => {
@@ -407,7 +451,7 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
       // the photos are kept before the album is touched, so a bad file changes nothing
       kept = await attachPhotos(files, repo);
     } catch {
-      setTrouble('The photos could not be kept. Your browser may be out of room.');
+      setTrouble(tr('archive.photosNotKept'));
       return;
     }
     if (kept.refs.length > 0) {
@@ -415,12 +459,12 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
         await editArchive((data) => addPhotos(data, album.id, kept.refs));
       } catch {
         await repo.dropPhotos(kept.refs);
-        setTrouble('The photos could not be kept. Your browser may be out of room.');
+        setTrouble(tr('archive.photosNotKept'));
         return;
       }
     }
     if (kept.skipped.length > 0) {
-      setTrouble(`${kept.skipped.join(', ')} could not be read as an image.`);
+      setTrouble(tr('archive.filesNotRead', { list: kept.skipped.join(', ') }));
     }
   };
   const zone = owner ? (
@@ -432,7 +476,7 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
   if (album.photos.length === 0) {
     return (
       <>
-        <p className={styles.sub}>No photos yet.</p>
+        <p className={styles.sub}>{tr('archive.noPhotosYet')}</p>
         {zone}
       </>
     );
@@ -459,7 +503,7 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
                   <span>
                     {social.liked ? '♥' : '♡'} {social.likes}
                   </span>
-                  <span>{plural(social.comments.length, 'comment')}</span>
+                  <span>{tr('archive.commentCount', { count: social.comments.length })}</span>
                 </div>
               </div>
               <p className={styles.cap}>{photoNote(photo)}</p>
@@ -468,7 +512,7 @@ function PhotoGrid({ album, owner }: { album: Album; owner: boolean }) {
               <button
                 type="button"
                 className={styles.pencil}
-                aria-label="Edit photo"
+                aria-label={tr('archive.editPhoto')}
                 onClick={() => openForm(appStore, { kind: 'photo', albumId: album.id, photoKey: key })}
               >
                 ✎

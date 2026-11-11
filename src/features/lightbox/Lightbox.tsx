@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
 import { creditLine, photoUrl } from '@/data/photos';
 import { describeAlbum, photoKey, photoNote } from '@/data/social';
@@ -33,6 +34,7 @@ export function Lightbox({ world }: { world: World }) {
 }
 
 function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; album: Album }) {
+  const { t: tr, i18n } = useTranslation();
   const stage = useRef<HTMLDivElement>(null);
   const swipe = useRef<{ x: number; used: boolean; touch: boolean } | null>(null);
   // how far a finger has pulled the row, while it is down
@@ -134,12 +136,12 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
       className={`${styles.lightbox}${shown && !photo.closing ? ` ${styles.isOn}` : ''}`}
       data-lightbox-root
       role="dialog"
-      aria-label="Photo"
+      aria-label={tr('lightbox.ariaLabel')}
     >
       <button
         type="button"
         className={styles.close}
-        aria-label="Close"
+        aria-label={tr('lightbox.close')}
         onClick={() => closePhoto(appStore)}
       >
         ✕
@@ -201,7 +203,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
               type="button"
               className={`${styles.nav} ${styles.prev}`}
               data-lightbox-nav
-              aria-label="Previous photo"
+              aria-label={tr('lightbox.previousPhoto')}
               onClick={(event) => {
                 event.stopPropagation();
                 stepPhoto(appStore, count, -1);
@@ -213,7 +215,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
               type="button"
               className={`${styles.nav} ${styles.next}`}
               data-lightbox-nav
-              aria-label="Next photo"
+              aria-label={tr('lightbox.nextPhoto')}
               onClick={(event) => {
                 event.stopPropagation();
                 stepPhoto(appStore, count, 1);
@@ -234,7 +236,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
               className={photo.slideshow ? styles.isOn : undefined}
               onClick={() => toggleSlideshow(appStore)}
             >
-              {photo.slideshow ? '❚❚ Slideshow' : '▶ Slideshow'}
+              {photo.slideshow ? tr('lightbox.slideshowOn') : tr('lightbox.slideshowOff')}
             </button>
           )}
           {count > 1 && (
@@ -245,7 +247,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
                 max={SETTING_LIMITS.slideSeconds[1]}
                 step={1}
                 value={slideSeconds}
-                aria-label="Slideshow speed"
+                aria-label={tr('lightbox.slideshowSpeed')}
                 onChange={(event) =>
                   settingsStore.set({ slideSeconds: Number(event.target.value) })
                 }
@@ -283,7 +285,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             {album.title}
           </button>
           <div className={styles.date}>
-            {monthYear(album)} · {album.photoCount} photos
+            {monthYear(album)} · {tr('lightbox.photoCount', { count: album.photoCount })}
           </div>
           <p className={styles.note}>{current ? photoNote(current) : ''}</p>
           <p className={styles.desc}>{describeAlbum(album)}</p>
@@ -299,9 +301,9 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             onClick={() => likePhoto(key)}
           >
             <i>♥</i>
-            <span>{social.likes.toLocaleString('en')}</span>
+            <span>{social.likes.toLocaleString(i18n.language)}</span>
           </button>
-          <h4>Comments · {social.comments.length}</h4>
+          <h4>{tr('lightbox.comments', { count: social.comments.length })}</h4>
           <div className={styles.comments}>
             {social.comments.map((comment, i) => (
               <div key={i} className={styles.comment}>
@@ -312,7 +314,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
             ))}
           </div>
           <CommentForm onSend={(text) => commentPhoto(key, text)} />
-          <div className={styles.demo}>Demo: comments are not saved yet.</div>
+          <div className={styles.demo}>{tr('lightbox.demoComments')}</div>
         </aside>
       </div>
     </div>
@@ -320,6 +322,7 @@ function PhotoWindow({ world, photo, album }: { world: World; photo: PhotoView; 
 }
 
 function CommentForm({ onSend }: { onSend: (text: string) => void }) {
+  const { t: tr } = useTranslation();
   const [text, setText] = useState('');
   const send = () => {
     onSend(text);
@@ -335,7 +338,7 @@ function CommentForm({ onSend }: { onSend: (text: string) => void }) {
     >
       <textarea
         value={text}
-        placeholder="Add a comment…"
+        placeholder={tr('lightbox.addComment')}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey) {
@@ -344,7 +347,7 @@ function CommentForm({ onSend }: { onSend: (text: string) => void }) {
           }
         }}
       />
-      <button type="submit">Post</button>
+      <button type="submit">{tr('lightbox.post')}</button>
     </form>
   );
 }

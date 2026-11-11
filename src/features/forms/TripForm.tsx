@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
 import { addTrip, deleteTrip, freshId, updateTrip } from '@/data/edits';
-import { MONTHS } from '@/lib/dates';
 
 import { ConfirmButton } from './ConfirmButton';
 import { endChoiceOf, endpointFor } from './endpoints';
@@ -24,9 +24,10 @@ export function TripForm({
   albumIds: string[];
   onClose: () => void;
 }) {
+  const { t: tr, i18n } = useTranslation();
   const { archive } = world;
   const trip = id ? (archive.trips.find((one) => one.id === id) ?? null) : null;
-  const homeLabel = `Home · ${world.home.name}`;
+  const homeLabel = tr('forms.homeLabel', { name: world.home.name });
   const [name, setName] = useState(trip?.name ?? '');
   const [start, setStart] = useState<EndChoice>(
     endChoiceOf(trip?.start ?? { home: true }, archive),
@@ -56,21 +57,21 @@ export function TripForm({
 
   return (
     <Sheet
-      title={trip ? 'Edit trip' : 'New trip'}
-      lead="A name, where it starts and ends, and the albums that belong to it."
+      title={trip ? tr('forms.editTripTitle') : tr('forms.newTripTitle')}
+      lead={tr('forms.tripLead')}
       onClose={onClose}
     >
-      <Field label="Name" htmlFor="fName">
+      <Field label={tr('forms.name')} htmlFor="fName">
         <input
           id="fName"
-          placeholder="Summer holiday 2023"
+          placeholder={tr('forms.namePlaceholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
       </Field>
       <PlaceField
         id="fStart"
-        label="Starts from"
+        label={tr('forms.startsFrom')}
         archive={archive}
         value={start === 'home' ? null : start}
         text={homeLabel}
@@ -79,7 +80,7 @@ export function TripForm({
       />
       <PlaceField
         id="fEnd"
-        label="Ends at"
+        label={tr('forms.endsAt')}
         archive={archive}
         value={end === 'home' ? null : end}
         text={homeLabel}
@@ -87,7 +88,7 @@ export function TripForm({
         onPick={(place) => place && setEnd(place)}
       />
       <Field>
-        Albums
+        {tr('forms.albums')}
         <div className={styles.checks}>
           {newest.map((album) => (
             <label key={album.id}>
@@ -100,7 +101,10 @@ export function TripForm({
                 {album.title} · {album.city.name}
               </span>
               <small>
-                {album.day} {MONTHS[album.month - 1]} {album.year}
+                {new Date(album.year, album.month - 1, album.day).toLocaleDateString(
+                  i18n.language,
+                  { day: 'numeric', month: 'short', year: 'numeric' },
+                )}
               </small>
             </label>
           ))}
@@ -112,16 +116,16 @@ export function TripForm({
       <Acts>
         {trip && (
           <ConfirmButton
-            label="Delete trip"
-            ask="Delete this trip? Its albums stay."
+            label={tr('forms.deleteTrip')}
+            ask={tr('forms.deleteTripAsk')}
             onConfirm={() => {
               run((data) => deleteTrip(data, trip.id));
             }}
           />
         )}
-        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn onClick={onClose}>{tr('forms.cancel')}</Btn>
         <Btn variant="main" disabled={!name.trim()} onClick={submit}>
-          {trip ? 'Save' : 'Create trip'}
+          {trip ? tr('forms.save') : tr('forms.createTrip')}
         </Btn>
       </Acts>
       {trouble && <Note>{trouble}</Note>}

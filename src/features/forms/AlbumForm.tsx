@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
 import { addAlbum, addPhotos, deleteAlbum, freshId, updateAlbum } from '@/data/edits';
 
@@ -32,6 +33,7 @@ export function AlbumForm({
   tripId: string | null;
   onClose: () => void;
 }) {
+  const { t: tr } = useTranslation();
   const { archive } = world;
   const album = id ? (archive.albumById.get(id) ?? null) : null;
   const city = album?.city ?? (cityKey ? (archive.cityByKey.get(cityKey) ?? null) : null);
@@ -79,7 +81,7 @@ export function AlbumForm({
         await editArchive((data) => updateAlbum(data, album.id, fields));
       } catch {
         setBusy(false);
-        setTrouble('The album could not be saved. Your browser may be out of room.');
+        setTrouble(tr('forms.albumSaveFailed'));
         return;
       }
       onClose();
@@ -96,15 +98,13 @@ export function AlbumForm({
         ({ refs, skipped } = await attachPhotos(files, repo));
       } catch {
         setBusy(false);
-        setTrouble('The photos could not be kept. Your browser may be out of room.');
+        setTrouble(tr('forms.photosNotKept'));
         return;
       }
       if (skipped.length > 0) {
         setFiles(files.filter((file) => !skipped.includes(file.name)));
         setBusy(false);
-        setTrouble(
-          `${skipped.join(', ')} could not be read as an image. Nothing was saved; press "Create album" again for the rest.`,
-        );
+        setTrouble(tr('forms.filesNotReadRetry', { list: skipped.join(', ') }));
         return;
       }
     }
@@ -117,7 +117,7 @@ export function AlbumForm({
     } catch {
       await repo?.dropPhotos(refs);
       setBusy(false);
-      setTrouble('The album could not be saved. Your browser may be out of room.');
+      setTrouble(tr('forms.albumSaveFailed'));
       return;
     }
     onClose();
@@ -125,25 +125,21 @@ export function AlbumForm({
 
   return (
     <Sheet
-      title={album ? 'Edit album' : 'New album'}
-      lead={
-        album
-          ? 'Change its name, place, date or trip.'
-          : 'A place, a day, and the photos from it. A new place becomes a new light on the globe.'
-      }
+      title={album ? tr('forms.editAlbumTitle') : tr('forms.newAlbumTitle')}
+      lead={album ? tr('forms.editAlbumLead') : tr('forms.newAlbumLead')}
       onClose={onClose}
     >
-      <Field label="Title" htmlFor="fName">
+      <Field label={tr('forms.title')} htmlFor="fName">
         <input
           id="fName"
-          placeholder="Rooftops at sunset"
+          placeholder={tr('forms.titlePlaceholder')}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
       </Field>
-      <PlaceField id="fPlace" label="Place" archive={archive} value={place} onPick={setPlace} />
+      <PlaceField id="fPlace" label={tr('forms.place')} archive={archive} value={place} onPick={setPlace} />
       <Row>
-        <Field label="Date" htmlFor="fDate">
+        <Field label={tr('forms.date')} htmlFor="fDate">
           <input
             id="fDate"
             type="date"
@@ -151,7 +147,7 @@ export function AlbumForm({
             onChange={(event) => setDate(event.target.value)}
           />
         </Field>
-        <Field label="Time" htmlFor="fTime">
+        <Field label={tr('forms.time')} htmlFor="fTime">
           <input
             id="fTime"
             type="time"
@@ -160,9 +156,9 @@ export function AlbumForm({
           />
         </Field>
       </Row>
-      <Field label="Trip" htmlFor="fTrip">
+      <Field label={tr('forms.trip')} htmlFor="fTrip">
         <select id="fTrip" value={trip} onChange={(event) => setTrip(event.target.value)}>
-          <option value="">Not part of a trip</option>
+          <option value="">{tr('forms.notPartOfATrip')}</option>
           {archive.trips.map((one) => (
             <option key={one.id} value={one.id}>
               {one.name}
@@ -176,30 +172,24 @@ export function AlbumForm({
       {!album && (
         <>
           <DropZone onFiles={(added) => setFiles([...files, ...added])} />
-          {files.length > 0 && (
-            <Note>
-              {files.length} photo{files.length === 1 ? '' : 's'} ready.
-            </Note>
-          )}
+          {files.length > 0 && <Note>{tr('forms.photosReady', { count: files.length })}</Note>}
         </>
       )}
       <Acts>
         {album && (
           <ConfirmButton
-            label="Delete album"
-            ask="Delete it and its photos?"
+            label={tr('forms.deleteAlbum')}
+            ask={tr('forms.deleteAlbumAsk')}
             onConfirm={() => {
               void editArchive(async (data, repo) => {
                 await repo.dropPhotos(deleteAlbum(data, album.id));
-              }).then(onClose, () =>
-                setTrouble('The album could not be deleted. Try again in a moment.'),
-              );
+              }).then(onClose, () => setTrouble(tr('forms.albumDeleteFailed')));
             }}
           />
         )}
-        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn onClick={onClose}>{tr('forms.cancel')}</Btn>
         <Btn variant="main" disabled={!ready} onClick={() => void submit()}>
-          {busy ? 'Saving…' : album ? 'Save' : 'Create album'}
+          {busy ? tr('forms.saving') : album ? tr('forms.save') : tr('forms.createAlbum')}
         </Btn>
       </Acts>
       {trouble && <Note>{trouble}</Note>}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
 import { createEngine } from '@/engine/engine';
 import type { GlobeEngine } from '@/engine/engine';
@@ -10,6 +11,7 @@ import styles from './GlobeStage.module.css';
 
 /** The three canvases (stars, sky events, globe) and the hover label, driven by the engine. */
 export function GlobeStage({ world, director }: { world: World; director: Director }) {
+  const { t: tr } = useTranslation();
   const stars = useRef<HTMLCanvasElement>(null);
   const sky = useRef<HTMLCanvasElement>(null);
   const globe = useRef<HTMLCanvasElement>(null);
@@ -49,7 +51,7 @@ export function GlobeStage({ world, director }: { world: World; director: Direct
         ref={globe}
         className={styles.globeCanvas}
         role="img"
-        aria-label="A night globe of the places visited. Drag to turn it, scroll to zoom."
+        aria-label={tr('globe.ariaLabel')}
       />
       <PlaceLabel ref={label} archive={world.archive} />
     </div>

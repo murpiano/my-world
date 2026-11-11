@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Archive } from '@/data/archive';
 import { loadCities } from '@/data/cities';
 import { browsePlaces, searchPlaces } from '@/data/places';
@@ -58,6 +59,7 @@ export function PlaceField({
   text?: string;
   home?: HomeChoice;
 }) {
+  const { t: tr } = useTranslation();
   const [typed, setTyped] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -136,7 +138,7 @@ export function PlaceField({
         role="combobox"
         aria-expanded={open}
         aria-controls={`${id}-list`}
-        placeholder="Pick from the list or start typing a city"
+        placeholder={tr('forms.placePlaceholder')}
         value={box}
         onChange={(event) => {
           setTyped(event.target.value);
@@ -189,7 +191,7 @@ export function PlaceField({
                     {isHome && home ? (
                       <>
                         {home.label}
-                        <small>your home base</small>
+                        <small>{tr('forms.yourHomeBase')}</small>
                       </>
                     ) : (
                       place && (
@@ -198,7 +200,7 @@ export function PlaceField({
                           <small>
                             {place.ru ? `${place.ru} · ` : ''}
                             {place.country}
-                            {place.cityKey ? ' · on your map' : ''}
+                            {place.cityKey ? tr('forms.onYourMap') : ''}
                           </small>
                         </>
                       )

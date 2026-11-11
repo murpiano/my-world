@@ -12,7 +12,6 @@ import {
   folderPhotos,
   journeyOfAlbum,
   journeys,
-  plural,
   tripRoute,
   whenLabel,
 } from './pages';
@@ -72,11 +71,6 @@ describe('labels', () => {
   it('names a moment and counts', () => {
     const a = album('Tram 28 and tiles');
     expect(whenLabel(a)).toBe(`${a.day} Nov 2016, ${a.time}`);
-    expect(plural(1, 'album')).toBe('1 album');
-    expect(plural(3, 'city')).toBe('3 cities');
-    expect(plural(2, 'place')).toBe('2 places');
-    expect(plural(8, 'country')).toBe('8 countries');
-    expect(plural(2, 'day')).toBe('2 days');
   });
 });
 

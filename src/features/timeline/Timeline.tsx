@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDirector } from '@/app/director-context';
 import { goArchive } from '@/features/archive/links';
 import type { Archive } from '@/data/archive';
@@ -27,6 +28,7 @@ const PICK_DRAG_PX = 4;
 
 /** ▶ plays; press and drag picks a range; a click picks up to a point; a year picks the year. */
 export function Timeline({ archive }: { archive: Archive }) {
+  const { t: tr } = useTranslation();
   const director = useDirector();
   const range = useStore(appStore, (s) => s.range);
   const picking = useStore(appStore, (s) => s.picking);
@@ -153,11 +155,11 @@ export function Timeline({ archive }: { archive: Archive }) {
       if (current.moved) return;
       const t = timeFor(event.clientX);
       director.beginPick(t);
-      if (director.endPick(t, false) === 'empty') flash('No albums in that stretch');
+      if (director.endPick(t, false) === 'empty') flash(tr('timeline.noAlbumsInStretch'));
       return;
     }
     const t = timeFor(event.clientX);
-    if (director.endPick(t, current.moved) === 'empty') flash('No albums in that stretch');
+    if (director.endPick(t, current.moved) === 'empty') flash(tr('timeline.noAlbumsInStretch'));
     // on a phone the first touch also grows the strip around what it picked
     if (mobile) grow(t);
   };
@@ -191,14 +193,14 @@ export function Timeline({ archive }: { archive: Archive }) {
     if (!drag) return;
     setDrag(null);
     if (director.endPick(timeFor(event.clientX), true) === 'empty')
-      flash('No albums in that stretch');
+      flash(tr('timeline.noAlbumsInStretch'));
   };
 
   const onYear = (year: number) => {
     // on a phone the first tap grows the strip and picks the year; it never opens the archive
     const first = mobile && !grown;
     const result = director.clickYear(year, !first);
-    if (result === 'empty') flash('No albums that year');
+    if (result === 'empty') flash(tr('timeline.noAlbumsThatYear'));
     else if (result === 'open') goArchive({ kind: 'year', year });
     else if (first) grow(year + 0.5);
   };
@@ -215,7 +217,7 @@ export function Timeline({ archive }: { archive: Archive }) {
   if (range) {
     chip = (
       <>
-        <b>{rangeLabel(range)}</b> {count} album{count === 1 ? '' : 's'} <i>✕</i>
+        <b>{rangeLabel(range)}</b> {tr('timeline.albumCount', { count })} <i>✕</i>
       </>
     );
   } else if (picking) {
@@ -224,7 +226,7 @@ export function Timeline({ archive }: { archive: Archive }) {
         <b>
           {stamp(picking.lo)} – {stamp(picking.hi)}
         </b>{' '}
-        <i>release to pick</i>
+        <i>{tr('timeline.releaseToPick')}</i>
       </>
     );
   } else if (note) {
@@ -249,7 +251,7 @@ export function Timeline({ archive }: { archive: Archive }) {
       <div className={styles.chips}>
         {zoomed && (
           <button type="button" className={styles.shrink} onClick={() => setGrown(false)}>
-            Done
+            {tr('timeline.done')}
           </button>
         )}
         <button
@@ -257,7 +259,7 @@ export function Timeline({ archive }: { archive: Archive }) {
           className={`${styles.chip}${chip ? ` ${styles.isOn}` : ''}`}
           onClick={() => director.clearRange()}
           tabIndex={range ? 0 : -1}
-          aria-label={range ? `Clear the range ${rangeLabel(range)}` : undefined}
+          aria-label={range ? tr('timeline.clearRange', { label: rangeLabel(range) }) : undefined}
         >
           {chip}
         </button>
@@ -269,7 +271,7 @@ export function Timeline({ archive }: { archive: Archive }) {
           // while the strip is grown the range is being chosen: Done gives play back
           disabled={zoomed}
           onClick={() => director.play()}
-          aria-label={playing ? 'Pause' : 'Play'}
+          aria-label={playing ? tr('timeline.pause') : tr('timeline.play')}
         >
           {playing ? '❚❚' : '▶'}
         </button>

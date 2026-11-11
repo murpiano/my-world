@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Archive } from '@/data/archive';
 import type { PickedPlace } from '@/data/places';
 import { logIn } from '@/state/user';
@@ -16,11 +17,12 @@ export function LoginForm({
   why: string | null;
   onClose: () => void;
 }) {
+  const { t: tr } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [home, setHome] = useState<PickedPlace | null>(null);
-  const problem = accountProblem({ name, email, password: pass, home });
+  const problem = accountProblem({ name, email, password: pass, home }, tr);
 
   const submit = () => {
     if (problem || !home) return;
@@ -35,11 +37,11 @@ export function LoginForm({
 
   return (
     <Sheet
-      title="Log in"
-      lead={`${why ? `${why} ` : ''}Your home base is where every trip starts and where it comes back to.`}
+      title={tr('forms.logInTitle')}
+      lead={`${why ? `${why} ` : ''}${tr('forms.loginLead')}`}
       onClose={onClose}
     >
-      <Field label="Name" htmlFor="fName">
+      <Field label={tr('forms.name')} htmlFor="fName">
         <input
           id="fName"
           autoComplete="name"
@@ -47,7 +49,7 @@ export function LoginForm({
           onChange={(event) => setName(event.target.value)}
         />
       </Field>
-      <Field label="Email" htmlFor="fMail">
+      <Field label={tr('forms.email')} htmlFor="fMail">
         <input
           id="fMail"
           type="email"
@@ -56,7 +58,7 @@ export function LoginForm({
           onChange={(event) => setEmail(event.target.value)}
         />
       </Field>
-      <Field label="Password" htmlFor="fPass">
+      <Field label={tr('forms.password')} htmlFor="fPass">
         <input
           id="fPass"
           type="password"
@@ -65,18 +67,15 @@ export function LoginForm({
           onChange={(event) => setPass(event.target.value)}
         />
       </Field>
-      <PlaceField id="fHome" label="Home base" archive={archive} value={home} onPick={setHome} />
+      <PlaceField id="fHome" label={tr('forms.homeBase')} archive={archive} value={home} onPick={setHome} />
       <Acts>
-        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn onClick={onClose}>{tr('forms.cancel')}</Btn>
         <Btn variant="main" disabled={problem !== null} onClick={submit}>
-          Log in
+          {tr('forms.logInTitle')}
         </Btn>
       </Acts>
       {problem && (name || email || pass) && <Note problem>{problem}</Note>}
-      <Note>
-        There is no server yet. Your archive stays in this browser; it starts as a copy of the demo,
-        so there is something to play with.
-      </Note>
+      <Note>{tr('forms.noServerNote')}</Note>
     </Sheet>
   );
 }

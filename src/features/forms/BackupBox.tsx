@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Archive } from '@/data/archive';
 import { makeBackup, readBackup } from '@/data/backup';
 import type { Backup } from '@/data/backup';
-import { plural } from '@/archive/pages';
 import { backend } from '@/backend/session';
 import { repository } from '@/state/owner';
 import { Acts, Btn, Note } from './Sheet';
@@ -12,6 +12,7 @@ const stamp = () => new Date().toISOString().slice(0, 10);
 
 /** The archive lives in this browser only, so this is how it is kept safe, or moved elsewhere. */
 export function BackupBox({ archive }: { archive: Archive }) {
+  const { t: tr } = useTranslation();
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<Backup | null>(null);
@@ -30,9 +31,9 @@ export function BackupBox({ archive }: { archive: Archive }) {
       link.download = `my-world-backup-${stamp()}.json`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-      setNote('The backup is downloaded.');
+      setNote(tr('forms.backupDownloaded'));
     } catch {
-      setNote('The backup could not be made.');
+      setNote(tr('forms.backupFailed'));
     } finally {
       setBusy(false);
     }
@@ -44,7 +45,7 @@ export function BackupBox({ archive }: { archive: Archive }) {
     const backup = readBackup(await file.text());
     if (!backup) {
       setPending(null);
-      setNote('That file is not a My World backup.');
+      setNote(tr('forms.notABackup'));
       return;
     }
     setPending(backup);
@@ -59,7 +60,7 @@ export function BackupBox({ archive }: { archive: Archive }) {
       location.reload();
     } catch {
       setBusy(false);
-      setNote('The backup could not be restored: the browser has no room for it.');
+      setNote(tr('forms.restoreFailed'));
     }
   };
 
@@ -71,30 +72,28 @@ export function BackupBox({ archive }: { archive: Archive }) {
 
   return (
     <div className={styles.backup}>
-      <h4>Backup</h4>
-      <Note>
-        {backend()
-          ? 'Your archive is kept with your account. Download a copy now and then for yourself.'
-          : 'Your archive is kept in this browser only. Download a copy now and then, or to move it to another browser or computer.'}
-      </Note>
+      <h4>{tr('forms.backupHeading')}</h4>
+      <Note>{backend() ? tr('forms.backupWithAccount') : tr('forms.backupNoAccount')}</Note>
       {pending ? (
         <Acts className={styles.acts}>
           <span className={styles.ask}>
-            Replace everything you have with this backup ({plural(albums, 'album')},{' '}
-            {plural(photos, 'photo')})?
+            {tr('forms.replaceAsk', {
+              albums: tr('forms.albumCount', { count: albums }),
+              photos: tr('forms.photoCount', { count: photos }),
+            })}
           </span>
-          <Btn onClick={() => setPending(null)}>Keep mine</Btn>
+          <Btn onClick={() => setPending(null)}>{tr('forms.keepMine')}</Btn>
           <Btn variant="main" disabled={busy} onClick={restore}>
-            Replace
+            {tr('forms.replace')}
           </Btn>
         </Acts>
       ) : (
         <Acts className={styles.acts}>
           <Btn disabled={busy} onClick={save}>
-            Download backup
+            {tr('forms.downloadBackup')}
           </Btn>
           <Btn disabled={busy} onClick={() => picker.current?.click()}>
-            Restore from backup
+            {tr('forms.restoreFromBackup')}
           </Btn>
           <input
             ref={picker}

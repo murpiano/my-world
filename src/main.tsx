@@ -9,6 +9,7 @@ import '@fontsource/space-grotesk/latin-ext-700.css';
 import '@fontsource-variable/fraunces/opsz-italic.css';
 import { App } from '@/app/App';
 import { ErrorBoundary } from '@/app/ErrorBoundary';
+import '@/i18n/config';
 import '@/styles/index';
 
 const root = document.getElementById('root');

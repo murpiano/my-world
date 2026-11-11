@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { World } from '@/app/boot';
 import { useDirector } from '@/app/director-context';
 import type { Archive } from '@/data/archive';
@@ -43,6 +44,7 @@ function useCardsPlace(low: boolean): { low: boolean; away: boolean } {
 
 /** The left column: the place in focus, its albums and its caption; hidden with nothing in focus. */
 export function AlbumPanel({ world }: { world: World }) {
+  const { t: tr } = useTranslation();
   const { archive } = world;
   const focus = useStore(appStore, (s) => s.focus);
   const endCard = useStore(appStore, (s) => s.endCard);
@@ -56,7 +58,7 @@ export function AlbumPanel({ world }: { world: World }) {
   return (
     <section
       className={`${styles.panel}${album ? '' : ` ${styles.isHidden}`}${placed.low ? ` ${styles.isLow}` : ''}${placed.away ? ` ${styles.isAway}` : ''}`}
-      aria-label="The place in focus"
+      aria-label={tr('panel.ariaLabel')}
     >
       {album && <LetGo />}
       <div className={styles.media}>
@@ -71,12 +73,13 @@ export function AlbumPanel({ world }: { world: World }) {
 
 /** A cross that lets go of the place in focus: on a phone there is no Esc key. */
 function LetGo() {
+  const { t: tr } = useTranslation();
   const director = useDirector();
   return (
     <button
       type="button"
       className={styles.close}
-      aria-label="Let go of this place"
+      aria-label={tr('panel.letGo')}
       onClick={() => director.escape()}
     >
       ✕
@@ -96,6 +99,7 @@ function PanelHead({
   focus: number;
   scope: Tour | null;
 }) {
+  const { t: tr } = useTranslation();
   const director = useDirector();
   if (scope) {
     return (
@@ -113,7 +117,7 @@ function PanelHead({
             )
           }
         >
-          {scope.kind === 'year' ? scope.name : `Trip · ${scope.name}`}
+          {scope.kind === 'year' ? scope.name : tr('panel.tripScope', { name: scope.name })}
         </button>
       </div>
     );
@@ -279,6 +283,7 @@ function AlbumCard({
   onSelect: (() => void) | undefined;
   onOpen: ((photoIndex: number, element: HTMLElement) => void) | undefined;
 }) {
+  const { t: tr } = useTranslation();
   const photos = album.photos;
   const count = photos.length;
   const on = count > 0 ? step % count : -1;
@@ -316,7 +321,7 @@ function AlbumCard({
       >
         {album.title}
         <small>
-          {monthYear(album)} · {album.photoCount} photos
+          {monthYear(album)} · {tr('panel.photoCount', { count: album.photoCount })}
         </small>
       </div>
       <div className={styles.name}>
@@ -351,13 +356,17 @@ function EndSlot({ world }: { world: World }) {
 }
 
 function Caption({ world }: { world: World }) {
+  const { t: tr, i18n } = useTranslation();
   const { archive, home } = world;
   const focus = useStore(appStore, (s) => s.focus);
   const endCard = useStore(appStore, (s) => s.endCard);
   const flightKm = useStore(appStore, (s) => s.flightKm);
   const album = archive.albums[focus];
   if (!album) return null;
-  const status = flightKm === null ? '' : `in flight · ${Math.round(flightKm).toLocaleString('en')} km`;
+  const status =
+    flightKm === null
+      ? ''
+      : tr('panel.inFlight', { km: Math.round(flightKm).toLocaleString(i18n.language) });
 
   if (endCard) {
     const city = endCard.cityKey ? archive.cityByKey.get(endCard.cityKey) : undefined;
@@ -365,10 +374,12 @@ function Caption({ world }: { world: World }) {
     const tripId = endCard.tour?.kind === 'trip' ? endCard.tour.tripId : null;
     return (
       <div className={styles.caption} key={`end-${endCard.fromAlbumId}`}>
-        <div className={styles.when}>{endCard.home ? 'Back home' : 'The end of the road'}</div>
+        <div className={styles.when}>
+          {endCard.home ? tr('panel.backHome') : tr('panel.endOfRoad')}
+        </div>
         <div className={styles.place}>{city ? city.name : home.name}</div>
         <div className={styles.route}>
-          {city ? city.country.name : home.country} · from{' '}
+          {city ? city.country.name : home.country} · {tr('panel.from')}{' '}
           <button
             type="button"
             className={styles.link}
@@ -388,7 +399,7 @@ function Caption({ world }: { world: World }) {
         <div className={styles.trip}>
           {endCard.tour && tripId && (
             <>
-              Trip ·{' '}
+              {tr('panel.trip')} ·{' '}
               <button
                 type="button"
                 className={styles.link}
@@ -408,7 +419,8 @@ function Caption({ world }: { world: World }) {
   return (
     <div className={styles.caption} key={album.id}>
       <div className={styles.when}>
-        {monthYear(album)} · album {focus + 1} of {archive.albums.length}
+        {monthYear(album)} ·{' '}
+        {tr('panel.albumOf', { n: focus + 1, total: archive.albums.length })}
       </div>
       <button
         type="button"
@@ -433,12 +445,12 @@ function Caption({ world }: { world: World }) {
         >
           {album.title}
         </button>{' '}
-        · {album.photoCount} photos
+        · {tr('panel.photoCount', { count: album.photoCount })}
       </div>
       <div className={styles.trip}>
         {trip && (
           <>
-            Trip ·{' '}
+            {tr('panel.trip')} ·{' '}
             <button
               type="button"
               className={styles.link}

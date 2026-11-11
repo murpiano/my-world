@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './DropZone.module.css';
 
 /** Photos to add: dropped on the zone, or chosen from the file dialog. */
 export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
+  const { t: tr } = useTranslation();
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const take = (list: FileList | null) => {
@@ -26,7 +28,7 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
         take(event.dataTransfer.files);
       }}
     >
-      Drop photos here, or click to choose
+      {tr('forms.dropZone')}
       <input
         ref={input}
         type="file"

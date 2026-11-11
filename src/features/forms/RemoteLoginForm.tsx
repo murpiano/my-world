@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Archive } from '@/data/archive';
 import type { PickedPlace } from '@/data/places';
 import { friendlyError } from '@/backend/account';
@@ -17,6 +18,7 @@ export function RemoteLoginForm({
   why: string | null;
   onClose: () => void;
 }) {
+  const { t: tr } = useTranslation();
   const [making, setMaking] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,8 +30,8 @@ export function RemoteLoginForm({
 
   // logging in needs only the pair; a new account needs all of it
   const problem = making
-    ? accountProblem({ name, email, password: pass, home })
-    : signInProblem(email, pass);
+    ? accountProblem({ name, email, password: pass, home }, tr)
+    : signInProblem(email, pass, tr);
 
   const submit = async () => {
     const auth = backend()?.auth;
@@ -62,8 +64,8 @@ export function RemoteLoginForm({
 
   if (sent) {
     return (
-      <Sheet title="Check your email" onClose={onClose}>
-        <Lead>We sent a link to {email.trim()}. Open it, then come back and log in.</Lead>
+      <Sheet title={tr('forms.checkYourEmail')} onClose={onClose}>
+        <Lead>{tr('forms.emailSentLead', { email: email.trim() })}</Lead>
         <Acts>
           <Btn
             variant="main"
@@ -72,7 +74,7 @@ export function RemoteLoginForm({
               setMaking(false);
             }}
           >
-            Log in
+            {tr('forms.logInTitle')}
           </Btn>
         </Acts>
       </Sheet>
@@ -81,16 +83,12 @@ export function RemoteLoginForm({
 
   return (
     <Sheet
-      title={making ? 'Make an account' : 'Log in'}
-      lead={`${why ? `${why} ` : ''}${
-        making
-          ? 'Your home base is where every trip starts and where it comes back to.'
-          : 'Your archive is kept with your account, on any device.'
-      }`}
+      title={making ? tr('forms.makeAnAccount') : tr('forms.logInTitle')}
+      lead={`${why ? `${why} ` : ''}${making ? tr('forms.loginLead') : tr('forms.remoteLoginLead')}`}
       onClose={onClose}
     >
       {making && (
-        <Field label="Name" htmlFor="fName">
+        <Field label={tr('forms.name')} htmlFor="fName">
           <input
             id="fName"
             autoComplete="name"
@@ -99,7 +97,7 @@ export function RemoteLoginForm({
           />
         </Field>
       )}
-      <Field label="Email" htmlFor="fMail">
+      <Field label={tr('forms.email')} htmlFor="fMail">
         <input
           id="fMail"
           type="email"
@@ -108,7 +106,7 @@ export function RemoteLoginForm({
           onChange={(event) => setEmail(event.target.value)}
         />
       </Field>
-      <Field label="Password" htmlFor="fPass">
+      <Field label={tr('forms.password')} htmlFor="fPass">
         <input
           id="fPass"
           type="password"
@@ -121,7 +119,7 @@ export function RemoteLoginForm({
         />
       </Field>
       {making && (
-        <PlaceField id="fHome" label="Home base" archive={archive} value={home} onPick={setHome} />
+        <PlaceField id="fHome" label={tr('forms.homeBase')} archive={archive} value={home} onPick={setHome} />
       )}
       <Acts>
         <Btn
@@ -130,10 +128,10 @@ export function RemoteLoginForm({
             setError(null);
           }}
         >
-          {making ? 'I have an account' : 'Make an account'}
+          {making ? tr('forms.iHaveAnAccount') : tr('forms.makeAnAccount')}
         </Btn>
         <Btn variant="main" disabled={problem !== null || busy} onClick={() => void submit()}>
-          {busy ? 'One moment…' : making ? 'Make it' : 'Log in'}
+          {busy ? tr('forms.oneMoment') : making ? tr('forms.makeIt') : tr('forms.logInTitle')}
         </Btn>
       </Acts>
       {(error ?? (problem && (email || pass || name) ? problem : null)) && (
